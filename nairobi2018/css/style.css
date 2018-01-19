@@ -94,7 +94,7 @@ h6 {
  * LINK STYLE
  *------------------------------------------*/
 a {
-    color              : #fd367e;
+    color              : #d9ab50;
     text-decoration    : none;
     -webkit-transition : all 0.3s ease 0s;
     -moz-transition    : all 0.3s ease 0s;
@@ -273,14 +273,14 @@ button:focus,
     }
 
 .main-menu .nav li a {
-    color       : #ffffff;
+    color       : #d9ab50;
     font-weight : 500;
     padding     : 15px 0 15px 30px;
     }
 
 .main-menu .nav li a:hover,
 .main-menu .nav li.active a {
-    color      : #fd367e;
+    color      : #999;
     background : transparent;
     }
 
@@ -301,7 +301,7 @@ button:focus,
 
     .main-menu .nav li a {
         padding : 5px 0;
-        color: #0e1555;
+        color: #d9ab50;
         }
 
     .navbar-collapse {
@@ -327,7 +327,7 @@ button:focus,
     }
 
 .sticky-nav .nav li a {
-    color : #0e1555;
+    color : #d9ab50;
     }
 
 .sticky-nav .navbar-toggle .icon-bar{
@@ -358,10 +358,10 @@ button:focus,
     background-repeat     : no-repeat;
     background-position   : center center;
     overflow              : hidden;
+    color                 : #d9ab50;
     }
 
 .jumbotron .content {
-    color             : #ffffff;
     position          : absolute;
     top               : 50%;
     left              : 0;
@@ -376,14 +376,12 @@ button:focus,
     }
 
 .jumbotron .content h1 {
-    color       : #ffffff;
     font-weight : bold;
     }
 
 .jumbotron .content p.lead {
     font-size   : 24px;
     line-height : 1.5em;
-    color       : rgba(255, 255, 255, .7);
     }
 
 .jumbotron .content .event-date {
