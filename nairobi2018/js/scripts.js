@@ -59,8 +59,8 @@ jQuery(function ($) {
         if ($('#googleMap').length > 0) {
 
             //set your google maps parameters
-            var $latitude  = 48.869319, //If you unable to find latitude and longitude of your address. Please visit http://www.latlong.net/convert-address-to-lat-long.html you can easily generate.
-                $longitude = 2.354261,
+            var $latitude  = -1.310206, //If you unable to find latitude and longitude of your address. Please visit http://www.latlong.net/convert-address-to-lat-long.html you can easily generate.
+                $longitude = 36.812567,
                 $map_zoom  = 18;
             /* ZOOM SETTING */
 
@@ -70,7 +70,7 @@ jQuery(function ($) {
             //we define here the style of the map
             var style = [{
                 "stylers" : [{
-                    "hue" : "#000"
+                    "hue" : "#111"
                 }, {
                     "saturation" : 100
                 }, {
@@ -85,11 +85,11 @@ jQuery(function ($) {
                 center            : new google.maps.LatLng($latitude, $longitude),
                 zoom              : $map_zoom,
                 panControl        : false,
-                zoomControl       : false,
+                zoomControl       : true,
                 mapTypeControl    : false,
                 streetViewControl : false,
                 mapTypeId         : google.maps.MapTypeId.ROADMAP,
-                scrollwheel       : false,
+                scrollwheel       : true,
                 styles            : style,
             }
             //initialize the map
