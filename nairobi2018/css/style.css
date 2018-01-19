@@ -525,7 +525,7 @@ button:focus,
     line-height      : 18px;
     border           : 0;
     margin-bottom: 20px;
-    height: 250px;
+    height: 260px;
     }
 
 @media (max-width : 767px) {
