@@ -459,6 +459,13 @@ button:focus,
     
     border           : 0;
     margin-bottom: 30px;
+    cursor: pointer;
+    }
+.team p {
+    font-weight: bold;
+    }
+.speaker {  
+    cursor: pointer;
     }
 
 @media (max-width : 767px) {
@@ -483,8 +490,6 @@ button:focus,
     text-transform   : uppercase;
     padding          : 5px 0;
     }
-
-
 
 .team .thumbnail h3 small {
     font-size: 14px;
@@ -523,6 +528,7 @@ button:focus,
     line-height      : 18px;
     border           : 0;
     margin-bottom: 20px;
+    height: 250px;
     }
 
 @media (max-width : 767px) {
