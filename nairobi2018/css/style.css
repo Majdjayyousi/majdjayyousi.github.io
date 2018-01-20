@@ -526,6 +526,7 @@ button:focus,
     border           : 0;
     margin-bottom: 20px;
     height: 260px;
+    cursor: pointer;
     }
 
 @media (max-width : 767px) {
