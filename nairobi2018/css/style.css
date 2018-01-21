@@ -521,14 +521,16 @@ button:focus,
  *-----------------------------------------------*/
 
 .section-attendee .thumbnail {
-    padding          : 0;
-    line-height      : 18px;
+    padding          : 10px;
     border           : 0;
     margin-bottom: 20px;
-    height: 260px !important;
+    height: 240px !important;
     cursor: pointer !important;
     }
-
+.section-attendee p {
+    font-size: 14px;
+    line-height      : 18px;
+}
 @media (max-width : 767px) {
     .section-attendee .thumbnail {
         margin-bottom : 20px;
@@ -540,7 +542,8 @@ button:focus,
     }
 
 .section-attendee .thumbnail h3 {
-    font-size        : 13px;
+    font-size        : 14px;
+    line-height      : 18px;
     font-weight: bold;
 
     margin           : 0 5px;
@@ -549,7 +552,8 @@ button:focus,
     }
 
 .section-attendee .thumbnail h3 small {
-    font-size: 14px;
+    font-size: 12px;
+    line-height      : 16px;
     color     : #888;
     display: block;
     font-weight: normal;
