@@ -459,10 +459,10 @@ button:focus,
     
     border           : 0;
     margin-bottom: 30px;
-    cursor: pointer !important;
+    cursor: pointer;
     }
 .speaker {  
-    cursor: pointer !important;
+    cursor: pointer;
     }
 
 @media (max-width : 767px) {
@@ -525,7 +525,7 @@ button:focus,
     border           : 0;
     margin-bottom: 20px;
     height: 240px !important;
-    cursor: pointer !important;
+    cursor: pointer;
     }
 .section-attendee p {
     font-size: 14px;
