@@ -454,11 +454,12 @@ button:focus,
  *-----------------------------------------------*/
 
 .team .thumbnail {
-    padding          : 0;
+    padding          : 20px;
     line-height      : 22px;
     
     border           : 0;
     margin-bottom: 30px;
+    height: 320px !important;
     cursor: pointer;
     }
 .speaker {  
@@ -472,7 +473,8 @@ button:focus,
     }
 
 .team .thumbnail img {
-    width : 100%;
+    width : 170px !important;
+    height : 170px !important;
     }
 
 .team .thumbnail .caption {
@@ -486,34 +488,16 @@ button:focus,
     margin           : 0 10px;
     text-transform   : uppercase;
     padding          : 5px 0;
+    line-height      : 18px;
     }
 
 .team .thumbnail h3 small {
     font-size: 14px;
     color     : #888;
+    margin-top: 10px;
+    line-height      : 17px;
     display: block;
     font-weight: normal;
-    }
-
-
-.team .social-links li {
-    display      : inline-block;
-    margin-right : 3px;
-    }
-
-.team .social-links li:last-child {
-    margin-right : 0;
-    }
-
-.team .social-links li a {
-    display   : block;
-    font-size : 14px;
-    color     : #ccc;
-    padding   : 0 5px;
-    }
-
-.team .social-links li a:hover {
-    color : #333;
     }
 
 /* ----------------------------------------------
@@ -557,6 +541,9 @@ button:focus,
     color     : #888;
     display: block;
     font-weight: normal;
+    }
+
+.section-attendee .thumbnail img {
     }
 
 /* --------------------------
