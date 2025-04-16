@@ -4,13 +4,17 @@ const mukuruCoordinates = [-1.3097, 36.8718]; // Approximate coordinates for Muk
 // Load saved settings from localStorage or use defaults
 const savedSettings = loadSettings();
 
+// Check if URL has parameters to override saved settings
+const urlSettings = parseUrlParams();
+const activeSettings = urlSettings || savedSettings;
+
 const map = L.map('map', {
     attributionControl: false, // Remove attribution control
     zoomDelta: 0.17, // Smaller zoom increments (approximately 1/6 of default)
     zoomSnap: 0.1  // Allow for fractional zoom levels with 0.1 precision
 }).setView(
-    savedSettings.mapPosition?.center || mukuruCoordinates, 
-    savedSettings.mapPosition?.zoom || 14
+    activeSettings.mapPosition?.center || mukuruCoordinates, 
+    activeSettings.mapPosition?.zoom || 14
 );
 
 // Define base layers
@@ -212,6 +216,7 @@ document.getElementById('labels-toggle').checked = savedSettings.toggles.labels;
 document.getElementById('icons-toggle').checked = savedSettings.toggles.icons;
 document.getElementById('density-toggle').checked = savedSettings.toggles.density;
 document.getElementById('exclusion-toggle').checked = savedSettings.toggles.exclusion !== false; // Default to true if not set
+document.getElementById('cluster-dots-toggle').checked = savedSettings.toggles.clusterDots || false; // Default to false if not set
 
 // Sample data for fallback
 const samplePolygon = [
@@ -286,7 +291,9 @@ function loadSettings() {
             density: true,
             exclusion: true,
             removedTransformers: false, // Toggle for removed transformers
-            demolishedTransformers: false // New toggle for demolished transformers
+            demolishedTransformers: false, // Toggle for demolished transformers
+            estimatedTransformers: true, // Toggle for estimated transformers
+            clusterDots: false // Toggle for clustering dots around transformers
         }
     };
     
@@ -310,6 +317,12 @@ function loadSettings() {
             }
             if (typeof savedSettings.toggles.demolishedTransformers === 'undefined') {
                 savedSettings.toggles.demolishedTransformers = false;
+            }
+            if (typeof savedSettings.toggles.estimatedTransformers === 'undefined') {
+                savedSettings.toggles.estimatedTransformers = true; // Default to showing estimated transformers
+            }
+            if (typeof savedSettings.toggles.clusterDots === 'undefined') {
+                savedSettings.toggles.clusterDots = false; // Default to not clustering dots
             }
         }
         
@@ -345,15 +358,220 @@ function saveSettings() {
             density: document.getElementById('density-toggle').checked,
             exclusion: document.getElementById('exclusion-toggle').checked,
             removedTransformers: document.getElementById('removed-transformers-toggle').checked,
-            demolishedTransformers: document.getElementById('demolished-transformers-toggle').checked // Add new toggle
+            demolishedTransformers: document.getElementById('demolished-transformers-toggle').checked,
+            estimatedTransformers: document.getElementById('estimated-transformers-toggle').checked,
+            clusterDots: document.getElementById('cluster-dots-toggle').checked
         }
     };
     
     try {
         localStorage.setItem('mukuruMapSettings', JSON.stringify(settings));
+        
+        // Update URL parameters
+        updateUrlParams(settings);
     } catch (e) {
         console.error('Error saving settings to localStorage:', e);
     }
+}
+
+// Function to parse URL parameters and override saved settings
+function parseUrlParams() {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    if (urlSearchParams.size === 0) return null;
+    
+    try {
+        const settings = {
+            mapStyle: urlSearchParams.get('style') || 'standard',
+            opacity: parseFloat(urlSearchParams.get('opacity')) || 0.7,
+            dotSize: parseFloat(urlSearchParams.get('dotSize')) || 3,
+            dotDensity: parseInt(urlSearchParams.get('dotDensity')) || 100,
+            groupOpacity: {
+                "Mukuru Kwa Njenga": parseFloat(urlSearchParams.get('njengaOpacity')) || 0.8,
+                "Mukuru Kwa Reuben": parseFloat(urlSearchParams.get('reubenOpacity')) || 0.8
+            },
+            mapPosition: {
+                center: urlSearchParams.get('center') ? 
+                    urlSearchParams.get('center').split(',').map(c => parseFloat(c)) : 
+                    mukuruCoordinates,
+                zoom: parseFloat(urlSearchParams.get('zoom')) || 14
+            },
+            toggles: {
+                contours: urlSearchParams.get('contours') !== 'false',
+                labels: urlSearchParams.get('labels') !== 'false',
+                icons: urlSearchParams.get('icons') !== 'false',
+                density: urlSearchParams.get('density') !== 'false',
+                exclusion: urlSearchParams.get('exclusion') !== 'false',
+                removedTransformers: urlSearchParams.get('removedTransformers') === 'true',
+                demolishedTransformers: urlSearchParams.get('demolishedTransformers') === 'true',
+                estimatedTransformers: urlSearchParams.get('estimatedTransformers') !== 'false',
+                clusterDots: urlSearchParams.get('clusterDots') === 'true'
+            },
+            distribution: {
+                settlement: urlSearchParams.get('settlement') || '',
+                informal: parseInt(urlSearchParams.get('informal')) || 50
+            }
+        };
+        
+        return settings;
+    } catch (e) {
+        console.error('Error parsing URL parameters:', e);
+        return null;
+    }
+}
+
+// Function to update URL parameters without reloading the page
+function updateUrlParams(settings) {
+    const urlParams = new URLSearchParams();
+    
+    // Add map style
+    urlParams.set('style', settings.mapStyle);
+    
+    // Add opacity
+    urlParams.set('opacity', settings.opacity.toString());
+    
+    // Add dot settings
+    urlParams.set('dotSize', settings.dotSize.toString());
+    urlParams.set('dotDensity', settings.dotDensity.toString());
+    
+    // Add group opacities
+    urlParams.set('njengaOpacity', settings.groupOpacity["Mukuru Kwa Njenga"].toString());
+    urlParams.set('reubenOpacity', settings.groupOpacity["Mukuru Kwa Reuben"].toString());
+    
+    // Add map position
+    urlParams.set('center', `${settings.mapPosition.center[0]},${settings.mapPosition.center[1]}`);
+    urlParams.set('zoom', settings.mapPosition.zoom.toString());
+    
+    // Add toggle states
+    Object.entries(settings.toggles).forEach(([key, value]) => {
+        urlParams.set(key, value.toString());
+    });
+    
+    // Add current distribution data if available
+    if (provisionData && provisionData.settlements) {
+        // Add current selected settlement
+        const selectedSettlement = document.getElementById('settlement-select').value;
+        if (selectedSettlement) {
+            urlParams.set('settlement', selectedSettlement);
+        }
+        
+        // Add current informal percentage
+        const informalPercentage = parseInt(document.getElementById('informal-slider').value);
+        if (!isNaN(informalPercentage)) {
+            urlParams.set('informal', informalPercentage.toString());
+        }
+    }
+    
+    // Update URL without refreshing page
+    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({ path: newUrl }, '', newUrl);
+}
+
+// Apply URL or saved settings to UI controls
+function applySettings(settings) {
+    // Apply map style
+    if (settings.mapStyle === 'satellite') {
+        if (!map.hasLayer(satelliteLayer)) {
+            map.removeLayer(standardLayer);
+            map.addLayer(satelliteLayer);
+        }
+    } else {
+        if (!map.hasLayer(standardLayer)) {
+            map.removeLayer(satelliteLayer);
+            map.addLayer(standardLayer);
+        }
+    }
+    
+    // Apply opacity
+    const opacitySlider = document.getElementById('opacity-slider');
+    opacitySlider.value = settings.opacity;
+    document.getElementById('opacity-value').textContent = `${Math.round(settings.opacity * 100)}%`;
+    if (map.hasLayer(standardLayer)) {
+        standardLayer.setOpacity(settings.opacity);
+    }
+    if (map.hasLayer(satelliteLayer)) {
+        satelliteLayer.setOpacity(settings.opacity);
+    }
+    
+    // Apply dot size
+    const dotSizeSlider = document.getElementById('dot-size-slider');
+    dotSizeSlider.value = settings.dotSize;
+    document.getElementById('dot-size-value').textContent = `${settings.dotSize}px`;
+    
+    // Apply dot density
+    const densityIndex = densityValues.findIndex(v => v >= settings.dotDensity);
+    document.getElementById('dot-density-slider').value = densityIndex >= 0 ? densityIndex : 2;
+    document.getElementById('dot-density-label').textContent = densityLabels[densityIndex >= 0 ? densityIndex : 2];
+    
+    // Apply group opacities
+    const njengaOpacitySlider = document.getElementById('njenga-opacity-slider');
+    njengaOpacitySlider.value = settings.groupOpacity["Mukuru Kwa Njenga"];
+    document.getElementById('njenga-opacity-value').textContent = `${Math.round(settings.groupOpacity["Mukuru Kwa Njenga"] * 100)}%`;
+    
+    const reubenOpacitySlider = document.getElementById('reuben-opacity-slider');
+    reubenOpacitySlider.value = settings.groupOpacity["Mukuru Kwa Reuben"];
+    document.getElementById('reuben-opacity-value').textContent = `${Math.round(settings.groupOpacity["Mukuru Kwa Reuben"] * 100)}%`;
+    
+    // Apply toggle states
+    document.getElementById('contours-toggle').checked = settings.toggles.contours;
+    document.getElementById('labels-toggle').checked = settings.toggles.labels;
+    document.getElementById('icons-toggle').checked = settings.toggles.icons;
+    document.getElementById('density-toggle').checked = settings.toggles.density;
+    document.getElementById('exclusion-toggle').checked = settings.toggles.exclusion;
+    document.getElementById('removed-transformers-toggle').checked = settings.toggles.removedTransformers;
+    document.getElementById('demolished-transformers-toggle').checked = settings.toggles.demolishedTransformers;
+    document.getElementById('estimated-transformers-toggle').checked = settings.toggles.estimatedTransformers;
+    document.getElementById('cluster-dots-toggle').checked = settings.toggles.clusterDots;
+    
+    // Apply toggle disabled states
+    const isIconsEnabled = settings.toggles.icons;
+    document.getElementById('removed-transformers-toggle').disabled = !isIconsEnabled;
+    document.getElementById('demolished-transformers-toggle').disabled = !isIconsEnabled;
+    document.getElementById('estimated-transformers-toggle').disabled = !isIconsEnabled;
+    
+    // Apply distribution settings if provided and elements exist
+    if (settings.distribution && provisionData && provisionData.settlements) {
+        const settlementSelect = document.getElementById('settlement-select');
+        const informalSlider = document.getElementById('informal-slider');
+        
+        // Once provisionData is loaded, apply the settlement selection
+        if (settings.distribution.settlement && settlementSelect) {
+            // Wait for settlement options to be populated
+            setTimeout(() => {
+                // Check if the selected settlement exists in the dropdown
+                const optionExists = Array.from(settlementSelect.options).some(
+                    option => option.value === settings.distribution.settlement
+                );
+                
+                if (optionExists) {
+                    settlementSelect.value = settings.distribution.settlement;
+                    
+                    // Apply informal percentage if provided
+                    if (settings.distribution.informal !== undefined && informalSlider) {
+                        informalSlider.value = settings.distribution.informal;
+                        
+                        // Update visual elements
+                        const informalPercentage = settings.distribution.informal;
+                        document.getElementById('informal-value').textContent = `${informalPercentage}%`;
+                        document.getElementById('informal-percent').textContent = `${informalPercentage}%`;
+                        document.getElementById('kplc-percent').textContent = `${100 - informalPercentage}%`;
+                        document.getElementById('informal-bar').style.width = `${informalPercentage}%`;
+                        document.getElementById('kplc-bar').style.width = `${100 - informalPercentage}%`;
+                        
+                        // Update the data in provisionData
+                        provisionData.settlements[settings.distribution.settlement] = informalPercentage;
+                        
+                        // Redraw the dots after a short delay to ensure everything is loaded
+                        setTimeout(updateDotDensity, 500);
+                    }
+                }
+            }, 1000); // Wait for UI to be fully initialized
+        }
+    }
+}
+
+// If we have URL parameters, apply them to the UI
+if (urlSettings) {
+    applySettings(urlSettings);
 }
 
 // Extract description text from HTML content
@@ -530,7 +748,7 @@ function initializeLabels() {
     });
 }
 
-// Fix the transformer visibility logic with a direct, simple approach
+// Update the initializeTransformers function to handle complex visibility rules
 function initializeTransformers() {
     // Clear existing icons
     iconsLayer.clearLayers();
@@ -539,19 +757,57 @@ function initializeTransformers() {
     fetch('data/transformers.json')
         .then(response => response.json())
         .then(data => {
-            // Get current group opacities
-            const groupOpacities = savedSettings.groupOpacity || {
-                "Mukuru Kwa Njenga": 0.8,
-                "Mukuru Kwa Reuben": 0.8
-            };
-            
-            console.log("Current opacities:", groupOpacities);
-            
             // Add each transformer to the map if it meets the criteria
             data.transformers.forEach(transformer => {
                 // Check which types of transformers to show
                 const showRemovedTransformers = document.getElementById('removed-transformers-toggle').checked;
                 const showDemolishedTransformers = document.getElementById('demolished-transformers-toggle').checked;
+                const showEstimatedTransformers = document.getElementById('estimated-transformers-toggle').checked; // NEW: Check estimated toggle
+                
+                // Check if this is an estimated transformer that should be hidden
+                if (transformer.type === "Estimated" && !showEstimatedTransformers) {
+                    return; // Skip this transformer if it's estimated and toggle is off
+                }
+                
+                // Check if transformer has in-village and out-of-village attributes
+                const hasInVillage = transformer["in-village"] && transformer["in-village"].trim() !== "";
+                const hasOutOfVillage = transformer["out-of-village"] && transformer["out-of-village"].trim() !== "";
+                
+                // Check group opacity for in-village
+                const inVillageGroup = transformer["in-village"];
+                let inVillageOpacity = 1.0; // Default opacity
+                
+                if (inVillageGroup === "Mukuru Kwa Njenga") {
+                    inVillageOpacity = parseFloat(document.getElementById('njenga-opacity-slider').value);
+                } else if (inVillageGroup === "Mukuru Kwa Reuben") {
+                    inVillageOpacity = parseFloat(document.getElementById('reuben-opacity-slider').value);
+                }
+                
+                // Check group opacity for out-of-village (if it's one of our tracked groups)
+                const outOfVillageGroup = transformer["out-of-village"];
+                let outOfVillageOpacity = 1.0; // Default to visible
+                
+                if (hasOutOfVillage) {
+                    if (outOfVillageGroup === "Mukuru Kwa Njenga") {
+                        outOfVillageOpacity = parseFloat(document.getElementById('njenga-opacity-slider').value);
+                    } else if (outOfVillageGroup === "Mukuru Kwa Reuben") {
+                        outOfVillageOpacity = parseFloat(document.getElementById('reuben-opacity-slider').value);
+                    }
+                }
+                
+                // Determine visibility based on rules:
+                // 1. Hide if it has no out-of-village attribute and in-village opacity is 0
+                // 2. Hide if both in-village and out-of-village opacities are 0
+                // 3. Hide if it has ONLY out-of-village attribute (no in-village) and out-of-village opacity is 0
+                // 4. Show otherwise
+                const hideTransformer = 
+                    (inVillageOpacity === 0 && !hasOutOfVillage) || 
+                    (inVillageOpacity === 0 && hasOutOfVillage && outOfVillageOpacity === 0) ||
+                    (!hasInVillage && hasOutOfVillage && outOfVillageOpacity === 0);
+                
+                if (hideTransformer) {
+                    return; // Skip this transformer
+                }
                 
                 // Display if: it's a Transformer device AND 
                 // (it's Operational OR 
@@ -562,25 +818,13 @@ function initializeTransformers() {
                      (transformer.status === "Removed" && showRemovedTransformers) ||
                      (transformer.status === "Demolished" && showDemolishedTransformers))) {
                     
-                    // STEP 1: CHECK VILLAGE OPACITY
-                    // If transformer is in Mukuru Kwa Reuben and opacity is 0, skip it
-                    if (transformer["in-village"] === "Mukuru Kwa Reuben" && 
-                        groupOpacities["Mukuru Kwa Reuben"] === 0) {
-                        return; // Skip this transformer
-                    }
-                    
-                    // If transformer is in Mukuru Kwa Njenga and opacity is 0, skip it
-                    if (transformer["in-village"] === "Mukuru Kwa Njenga" && 
-                        groupOpacities["Mukuru Kwa Njenga"] === 0) {
-                        return; // Skip this transformer
-                    }
-                    
                     // Only check exclusion zones for operational and removed transformers
                     // Don't apply the exclusion zone rule to demolished transformers
                     if (transformer.status !== "Demolished" && document.getElementById('exclusion-toggle').checked) {
                         const point = L.latLng(transformer.lat, transformer.lng);
                         if (isPointInExclusionZone(point)) {
-                            return; // Skip this transformer
+                            console.log(`Skipping transformer in exclusion zone: ${transformer.name}`);
+                            return;
                         }
                     }
                     
@@ -588,10 +832,14 @@ function initializeTransformers() {
                     let boltColor;
                     
                     if (transformer.status === "Operational") {
-                        // For operational transformers, use the in-village/out-of-village logic
-                        // Yellow inside, orange outside
-                        boltColor = transformer["out-of-village"] && !transformer["in-village"] 
-                            ? "#FF8C00" : "#FFD700";
+                        // Special case: If in-village opacity is 0 but out-of-village opacity is not 0,
+                        // then show as out-of-village regardless of in-village status
+                        if (inVillageOpacity === 0 && hasOutOfVillage && outOfVillageOpacity > 0) {
+                            boltColor = "#FF8C00"; // Orange for out-of-village
+                        } else {
+                            // Otherwise, if both are present, prioritize in-village
+                            boltColor = (hasOutOfVillage && !hasInVillage) ? "#FF8C00" : "#FFD700"; // Orange if ONLY out-of-village, yellow otherwise
+                        }
                     } else if (transformer.status === "Removed") {
                         // Gray for removed transformers
                         boltColor = "#888888";
@@ -600,10 +848,16 @@ function initializeTransformers() {
                         boltColor = "#FF0000";
                     }
                     
+                    // Special styling for estimated transformers
+                    let estimatedClass = "";
+                    if (transformer.type === "Estimated") {
+                        estimatedClass = "estimated-transformer";
+                    }
+                    
                     // Create a custom transformer icon using a pole (custom div) + lightning bolt (Font Awesome)
                     const transformerIcon = L.divIcon({
-                        className: 'transformer-icon',
-                        html: `<div><span class="fa-bar"></span><i class="fa-solid fa-bolt" style="color: ${boltColor};"></i></div>`,
+                        className: `transformer-icon ${estimatedClass}`,
+                        html: `<div><span class="fa-bar"></span><i class="fa-solid fa-bolt ${estimatedClass}" style="color: ${boltColor};"></i></div>`,
                         iconSize: [40, 40],
                         iconAnchor: [20, 40],  // Align exactly at the bottom of the pole
                         popupAnchor: [0, -40]
@@ -622,7 +876,7 @@ function initializeTransformers() {
                                 </tr>
                                 <tr>
                                     <td>Village:</td>
-                                    <td>${transformer["in-village"] || transformer["out-of-village"] || "Unknown"}</td>
+                                    <td>${transformer["in-village"]}</td>
                                 </tr>
                                 <tr>
                                     <td>Type:</td>
@@ -632,6 +886,7 @@ function initializeTransformers() {
                                     <td>Device:</td>
                                     <td>${transformer.device}</td>
                                 </tr>
+                                ${hasOutOfVillage ? `<tr><td>Serves:</td><td>${transformer["out-of-village"]}</td></tr>` : ''}
                             </table>
                         </div>
                     `);
@@ -639,6 +894,8 @@ function initializeTransformers() {
                     marker.addTo(iconsLayer);
                 }
             });
+            
+            console.log('Transformers loaded');
         })
         .catch(error => {
             console.error('Error loading transformer data:', error);
@@ -648,117 +905,7 @@ function initializeTransformers() {
         });
 }
 
-// Also update the fallback function with the same opacity logic
-function initializeTransformers_fallback() {
-    console.log('Using fallback transformer data');
-    
-    // Sample transformer locations for main settlements
-    const sampleTransformers = [
-        { id: 1, name: "Sisal", lat: -1.31257272, lng: 36.88417861, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
-        { id: 2, name: "Vietnam", lat: -1.31571733, lng: 36.88221482, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
-        { id: 3, name: "Milimani", lat: -1.31732272, lng: 36.88571341, status: "Operational", "in-village": "", "out-of-village": "Mukuru Kwa Njenga", device: "Transformer", type: "Landlord" },
-        { id: 4, name: "Removed Transformer", lat: -1.31492633, lng: 36.88173956, status: "Removed", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
-        { id: 5, name: "Demolished Transformer", lat: -1.31782149, lng: 36.88352488, status: "Demolished", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
-        { id: 6, name: "Transformer - Rurie", lat: -1.31429822, lng: 36.87107608, status: "Operational", "in-village": "Mukuru Kwa Reuben", "out-of-village": "", device: "Transformer", type: "KPLC" }
-    ];
-    
-    // Get current group opacities
-    const groupOpacities = savedSettings.groupOpacity || {
-        "Mukuru Kwa Njenga": 0.8,
-        "Mukuru Kwa Reuben": 0.8
-    };
-    
-    console.log("Current opacities (fallback):", groupOpacities);
-    
-    // Add each transformer to the map
-    sampleTransformers.forEach(transformer => {
-        // Check which types of transformers to show
-        const showRemovedTransformers = document.getElementById('removed-transformers-toggle').checked;
-        const showDemolishedTransformers = document.getElementById('demolished-transformers-toggle').checked;
-        
-        // Only display transformers with appropriate criteria
-        if (transformer.device === "Transformer" && 
-            (transformer.status === "Operational" || 
-             (transformer.status === "Removed" && showRemovedTransformers) ||
-             (transformer.status === "Demolished" && showDemolishedTransformers))) {
-            
-            // STEP 1: CHECK VILLAGE OPACITY
-            // If transformer is in Mukuru Kwa Reuben and opacity is 0, skip it
-            if (transformer["in-village"] === "Mukuru Kwa Reuben" && 
-                groupOpacities["Mukuru Kwa Reuben"] === 0) {
-                return; // Skip this transformer
-            }
-            
-            // If transformer is in Mukuru Kwa Njenga and opacity is 0, skip it
-            if (transformer["in-village"] === "Mukuru Kwa Njenga" && 
-                groupOpacities["Mukuru Kwa Njenga"] === 0) {
-                return; // Skip this transformer
-            }
-            
-            // Only check exclusion zones for operational and removed transformers
-            // Don't apply the exclusion zone rule to demolished transformers
-            if (transformer.status !== "Demolished" && document.getElementById('exclusion-toggle').checked) {
-                const point = L.latLng(transformer.lat, transformer.lng);
-                if (isPointInExclusionZone(point)) {
-                    return; // Skip this transformer
-                }
-            }
-            
-            // Determine bolt color based on status and in-village/out-of-village status
-            let boltColor;
-            
-            if (transformer.status === "Operational") {
-                // For operational transformers, use the in-village/out-of-village logic
-                // Yellow inside, orange outside
-                boltColor = transformer["out-of-village"] && !transformer["in-village"] 
-                    ? "#FF8C00" : "#FFD700";
-            } else if (transformer.status === "Removed") {
-                // Gray for removed transformers
-                boltColor = "#888888";
-            } else if (transformer.status === "Demolished") {
-                // Red for demolished transformers
-                boltColor = "#FF0000";
-            }
-            
-            // Create a custom transformer icon using a pole (custom div) + lightning bolt (Font Awesome)
-            const transformerIcon = L.divIcon({
-                className: 'transformer-icon',
-                html: `<div><span class="fa-bar"></span><i class="fa-solid fa-bolt" style="color: ${boltColor};"></i></div>`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 40],  // Align exactly at the bottom of the pole
-                popupAnchor: [0, -40]
-            });
-            
-            L.marker([transformer.lat, transformer.lng], {
-                icon: transformerIcon
-            }).bindPopup(`
-                <div class="transformer-popup">
-                    <h3>${transformer.id}. ${transformer.name}</h3>
-                    <table>
-                        <tr>
-                            <td>Status:</td>
-                            <td>${transformer.status}</td>
-                        </tr>
-                        <tr>
-                            <td>Village:</td>
-                            <td>${transformer["in-village"] || transformer["out-of-village"] || "Unknown"}</td>
-                        </tr>
-                        <tr>
-                            <td>Type:</td>
-                            <td>${transformer.type}</td>
-                        </tr>
-                        <tr>
-                            <td>Device:</td>
-                            <td>${transformer.device}</td>
-                        </tr>
-                    </table>
-                </div>
-            `).addTo(iconsLayer);
-        }
-    });
-}
-
-// Add CSS for transformer icons
+// Update the CSS for transformer icons to include estimated style
 const transformerIconStyle = document.createElement('style');
 transformerIconStyle.textContent = `
     .transformer-icon {
@@ -777,6 +924,11 @@ transformerIconStyle.textContent = `
         top: 0;
         right: 8px;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+    .transformer-icon .fa-bolt.estimated-transformer {
+        border: 1px dotted black;
+        padding: 2px;
+        border-radius: 50%;
     }
     .transformer-icon .fa-bar {
         position: absolute;
@@ -809,20 +961,198 @@ transformerIconStyle.textContent = `
 `;
 document.head.appendChild(transformerIconStyle);
 
-// Add a new event listener for the removed transformers toggle
+// Update the fallback function too for consistency
+function initializeTransformers_fallback() {
+    console.log('Using fallback transformer data');
+    
+    // Sample transformer locations for main settlements
+    const sampleTransformers = [
+        { id: 1, name: "Sisal", lat: -1.31257272, lng: 36.88417861, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
+        { id: 2, name: "Vietnam", lat: -1.31571733, lng: 36.88221482, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
+        { id: 3, name: "Milimani", lat: -1.31732272, lng: 36.88571341, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "Landlord" },
+        { id: 4, name: "Removed Transformer", lat: -1.31492633, lng: 36.88173956, status: "Removed", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
+        { id: 5, name: "Demolished Transformer", lat: -1.31782149, lng: 36.88352488, status: "Demolished", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
+        { id: 6, name: "Out-of-village Transformer", lat: -1.31300000, lng: 36.88000000, status: "Operational", "in-village": "", "out-of-village": "External Area", device: "Transformer", type: "KPLC" },
+        { id: 7, name: "Both In & Out Transformer", lat: -1.31400000, lng: 36.88100000, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "Mukuru Kwa Reuben", device: "Transformer", type: "KPLC" },
+        { id: "E1", name: "Estimated Transformer", lat: -1.31600000, lng: 36.88200000, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "Estimated" }
+    ];
+    
+    // Add each transformer to the map
+    sampleTransformers.forEach(transformer => {
+        // Check which types of transformers to show
+        const showRemovedTransformers = document.getElementById('removed-transformers-toggle').checked;
+        const showDemolishedTransformers = document.getElementById('demolished-transformers-toggle').checked;
+        const showEstimatedTransformers = document.getElementById('estimated-transformers-toggle').checked; // NEW: Check estimated toggle
+        
+        // Check if this is an estimated transformer that should be hidden
+        if (transformer.type === "Estimated" && !showEstimatedTransformers) {
+            return; // Skip this transformer if it's estimated and toggle is off
+        }
+        
+        // Check if transformer has in-village and out-of-village attributes
+        const hasInVillage = transformer["in-village"] && transformer["in-village"].trim() !== "";
+        const hasOutOfVillage = transformer["out-of-village"] && transformer["out-of-village"].trim() !== "";
+        
+        // Check group opacity for in-village
+        const inVillageGroup = transformer["in-village"];
+        let inVillageOpacity = 1.0; // Default opacity
+        
+        if (inVillageGroup === "Mukuru Kwa Njenga") {
+            inVillageOpacity = parseFloat(document.getElementById('njenga-opacity-slider').value);
+        } else if (inVillageGroup === "Mukuru Kwa Reuben") {
+            inVillageOpacity = parseFloat(document.getElementById('reuben-opacity-slider').value);
+        }
+        
+        // Check group opacity for out-of-village (if it's one of our tracked groups)
+        const outOfVillageGroup = transformer["out-of-village"];
+        let outOfVillageOpacity = 1.0; // Default to visible
+        
+        if (hasOutOfVillage) {
+            if (outOfVillageGroup === "Mukuru Kwa Njenga") {
+                outOfVillageOpacity = parseFloat(document.getElementById('njenga-opacity-slider').value);
+            } else if (outOfVillageGroup === "Mukuru Kwa Reuben") {
+                outOfVillageOpacity = parseFloat(document.getElementById('reuben-opacity-slider').value);
+            }
+        }
+        
+        // Determine visibility based on rules:
+        // 1. Hide if it has no out-of-village attribute and in-village opacity is 0
+        // 2. Hide if both in-village and out-of-village opacities are 0
+        // 3. Hide if it has ONLY out-of-village attribute (no in-village) and out-of-village opacity is 0
+        // 4. Show otherwise
+        const hideTransformer = 
+            (inVillageOpacity === 0 && !hasOutOfVillage) || 
+            (inVillageOpacity === 0 && hasOutOfVillage && outOfVillageOpacity === 0) ||
+            (!hasInVillage && hasOutOfVillage && outOfVillageOpacity === 0);
+        
+        if (hideTransformer) {
+            return; // Skip this transformer
+        }
+        
+        // Only display transformers with appropriate criteria
+        if (transformer.device === "Transformer" && 
+            (transformer.status === "Operational" || 
+             (transformer.status === "Removed" && showRemovedTransformers) ||
+             (transformer.status === "Demolished" && showDemolishedTransformers))) {
+            
+            // Only check exclusion zones for operational and removed transformers
+            // Don't apply the exclusion zone rule to demolished transformers
+            if (transformer.status !== "Demolished" && document.getElementById('exclusion-toggle').checked) {
+                const point = L.latLng(transformer.lat, transformer.lng);
+                if (isPointInExclusionZone(point)) {
+                    console.log(`Skipping fallback transformer in exclusion zone: ${transformer.name}`);
+                    return;
+                }
+            }
+            
+            // Determine bolt color based on status and in-village/out-of-village status
+            let boltColor;
+            
+            if (transformer.status === "Operational") {
+                // Special case: If in-village opacity is 0 but out-of-village opacity is not 0,
+                // then show as out-of-village regardless of in-village status
+                if (inVillageOpacity === 0 && hasOutOfVillage && outOfVillageOpacity > 0) {
+                    boltColor = "#FF8C00"; // Orange for out-of-village
+                } else {
+                    // Otherwise, if both are present, prioritize in-village
+                    boltColor = (hasOutOfVillage && !hasInVillage) ? "#FF8C00" : "#FFD700"; // Orange if ONLY out-of-village, yellow otherwise
+                }
+            } else if (transformer.status === "Removed") {
+                // Gray for removed transformers
+                boltColor = "#888888";
+            } else if (transformer.status === "Demolished") {
+                // Red for demolished transformers
+                boltColor = "#FF0000";
+            }
+            
+            // Special styling for estimated transformers
+            let estimatedClass = "";
+            if (transformer.type === "Estimated") {
+                estimatedClass = "estimated-transformer";
+            }
+            
+            // Create a custom transformer icon using a pole (custom div) + lightning bolt (Font Awesome)
+            const transformerIcon = L.divIcon({
+                className: `transformer-icon ${estimatedClass}`,
+                html: `<div><span class="fa-bar"></span><i class="fa-solid fa-bolt ${estimatedClass}" style="color: ${boltColor};"></i></div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],  // Align exactly at the bottom of the pole
+                popupAnchor: [0, -40]
+            });
+            
+            L.marker([transformer.lat, transformer.lng], {
+                icon: transformerIcon
+            }).bindPopup(`
+                <div class="transformer-popup">
+                    <h3>${transformer.id}. ${transformer.name}</h3>
+                    <table>
+                        <tr>
+                            <td>Status:</td>
+                            <td>${transformer.status}</td>
+                        </tr>
+                        <tr>
+                            <td>Village:</td>
+                            <td>${transformer["in-village"]}</td>
+                        </tr>
+                        <tr>
+                            <td>Type:</td>
+                            <td>${transformer.type}</td>
+                        </tr>
+                        <tr>
+                            <td>Device:</td>
+                            <td>${transformer.device}</td>
+                        </tr>
+                        ${hasOutOfVillage ? `<tr><td>Serves:</td><td>${transformer["out-of-village"]}</td></tr>` : ''}
+                    </table>
+                </div>
+            `).addTo(iconsLayer);
+        }
+    });
+}
+
+// Add event listeners for all controls
 document.addEventListener('DOMContentLoaded', function() {
-    // Set initial checkbox state based on saved settings
+    // Set initial checkbox states based on saved settings
     document.getElementById('removed-transformers-toggle').checked = savedSettings.toggles.removedTransformers;
     document.getElementById('demolished-transformers-toggle').checked = savedSettings.toggles.demolishedTransformers;
+    document.getElementById('estimated-transformers-toggle').checked = savedSettings.toggles.estimatedTransformers; // NEW: Set estimated transformer toggle
     
-    // Add event listeners for the toggles
+    // Add event listeners for the transformer toggles
     document.getElementById('removed-transformers-toggle').addEventListener('change', function() {
+        // Remove existing legend and add it again to refresh
+        const oldLegend = document.querySelector('.transformer-legend');
+        if (oldLegend) {
+            oldLegend.remove();
+        }
+        createTransformerLegend().addTo(map);
+        
         // Reinitialize transformers to reflect the new toggle state
         initializeTransformers();
         saveSettings();
     });
     
     document.getElementById('demolished-transformers-toggle').addEventListener('change', function() {
+        // Remove existing legend and add it again to refresh
+        const oldLegend = document.querySelector('.transformer-legend');
+        if (oldLegend) {
+            oldLegend.remove();
+        }
+        createTransformerLegend().addTo(map);
+        
+        // Reinitialize transformers to reflect the new toggle state
+        initializeTransformers();
+        saveSettings();
+    });
+    
+    // NEW: Add event listener for estimated transformers toggle
+    document.getElementById('estimated-transformers-toggle').addEventListener('change', function() {
+        // Remove existing legend and add it again to refresh
+        const oldLegend = document.querySelector('.transformer-legend');
+        if (oldLegend) {
+            oldLegend.remove();
+        }
+        createTransformerLegend().addTo(map);
+        
         // Reinitialize transformers to reflect the new toggle state
         initializeTransformers();
         saveSettings();
@@ -833,6 +1163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const isEnabled = this.checked;
         const removedToggle = document.getElementById('removed-transformers-toggle');
         const demolishedToggle = document.getElementById('demolished-transformers-toggle');
+        const estimatedToggle = document.getElementById('estimated-transformers-toggle'); // NEW: Get estimated toggle
         
         if (!isEnabled) {
             // If transformers are turned off, hide the icons
@@ -845,8 +1176,31 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update sub-toggle states
         removedToggle.disabled = !isEnabled;
         demolishedToggle.disabled = !isEnabled;
+        estimatedToggle.disabled = !isEnabled; // NEW: Disable estimated toggle when icons are off
+        
+        // Update the legend as well
+        const oldLegend = document.querySelector('.transformer-legend');
+        if (oldLegend) {
+            oldLegend.remove();
+        }
+        if (isEnabled) {
+            createTransformerLegend().addTo(map);
+        }
         
         // Reinitialize transformers
+        initializeTransformers();
+        saveSettings();
+    });
+    
+    // Add event listeners for group opacity sliders to update transformers
+    document.getElementById('njenga-opacity-slider').addEventListener('change', function() {
+        // Reinitialize transformers when group opacity changes
+        initializeTransformers();
+        saveSettings();
+    });
+    
+    document.getElementById('reuben-opacity-slider').addEventListener('change', function() {
+        // Reinitialize transformers when group opacity changes
         initializeTransformers();
         saveSettings();
     });
@@ -939,9 +1293,101 @@ function getProvisionProportion(settlementName, provisionType) {
     }
 }
 
+// Helper function to get transformer locations
+function getTransformerLocations() {
+    const transformerLocations = [];
+    
+    // Create a temporary div to hold transformer markers
+    const tempDiv = document.createElement('div');
+    document.body.appendChild(tempDiv);
+    
+    // Get transformer locations from the DOM
+    const transformerMarkers = document.querySelectorAll('.transformer-icon');
+    transformerMarkers.forEach(markerIcon => {
+        // Get the parent marker element (which has the latlng)
+        const markerParent = markerIcon.closest('.leaflet-marker-icon');
+        if (markerParent) {
+            // Extract coordinates from the transform style (e.g., "translate3d(123px, 456px, 0px)")
+            const transformStyle = markerParent.style.transform;
+            const matches = transformStyle.match(/translate3d\((-?\d+(?:\.\d+)?)px, (-?\d+(?:\.\d+)?)px/i);
+            
+            if (matches && matches.length >= 3) {
+                const x = parseFloat(matches[1]);
+                const y = parseFloat(matches[2]);
+                const latlng = map.containerPointToLatLng([x, y]);
+                
+                transformerLocations.push(latlng);
+            }
+        }
+    });
+    
+    // Clean up
+    document.body.removeChild(tempDiv);
+    
+    // If no transformers found via DOM, use a fallback method from the transformer data
+    if (transformerLocations.length === 0) {
+        // Try to fetch from JSON directly
+        try {
+            fetch('data/transformers.json')
+                .then(response => response.json())
+                .then(data => {
+                    data.transformers.forEach(transformer => {
+                        if (transformer.device === "Transformer" && 
+                            transformer.status === "Operational") {
+                            transformerLocations.push(L.latLng(transformer.lat, transformer.lng));
+                        }
+                    });
+                });
+        } catch (e) {
+            console.error('Error loading transformer locations:', e);
+        }
+    }
+    
+    return transformerLocations;
+}
+
+// Function to calculate bias for a point based on proximity to transformers
+function calculateTransformerBias(point, transformerLocations, maxDistance = 0.005) {
+    if (!transformerLocations || transformerLocations.length === 0) {
+        return 0; // No transformers, no bias
+    }
+    
+    // Find the closest transformer
+    let minDistance = Infinity;
+    for (const transformerLoc of transformerLocations) {
+        const distance = point.distanceTo(transformerLoc);
+        minDistance = Math.min(minDistance, distance);
+    }
+    
+    // Convert distance to kilometers for easier calculation
+    minDistance = minDistance / 1000;
+    
+    // If the point is very close to a transformer, give it a high bias
+    if (minDistance < maxDistance) {
+        // Exponential decay: the closer to the transformer, the higher the bias
+        // Value ranges from 0 (far away) to 1 (at the transformer)
+        return Math.exp(-minDistance / (maxDistance / 3));
+    }
+    
+    return 0; // No bias for points beyond maxDistance
+}
+
 // Function to update density dots
 function initializeDensityDots() {
     if (!geoJSONData) return;
+    
+    // Check if clustering around transformers is enabled
+    const clusterAroundTransformers = document.getElementById('cluster-dots-toggle').checked;
+    
+    // Get all transformer locations if clustering is enabled
+    let allTransformerLocations = [];
+    if (clusterAroundTransformers) {
+        allTransformerLocations = getTransformerLocations();
+        console.log(`Found ${allTransformerLocations.length} total transformer locations for clustering`);
+    }
+    
+    // Define the clustering strength factor (0 = no clustering, 1 = maximum clustering)
+    const clusteringStrength = 0.7;
     
     // Add an SVG overlay for the dots
     const svgLayer = L.svg().addTo(map);
@@ -1056,6 +1502,20 @@ function initializeDensityDots() {
         const bounds = polygon.getBounds();
         const dots = [];
         
+        // Filter transformer locations to only include those within this settlement
+        let settlementTransformers = [];
+        if (clusterAroundTransformers && allTransformerLocations.length > 0) {
+            // Only include transformers that are inside this settlement's polygon
+            settlementTransformers = allTransformerLocations.filter(location => 
+                L.GeometryUtil.isPointInPolygon(location, polygon._latlngs[0])
+            );
+            
+            console.log(`Found ${settlementTransformers.length} transformers in settlement ${areaName}`);
+        }
+        
+        // Flag for whether this settlement has transformers for clustering
+        const hasTransformersForClustering = settlementTransformers.length > 0;
+        
         // Calculate polygon area in square meters
         const area = L.GeometryUtil.geodesicArea(latlngs);
         
@@ -1126,10 +1586,64 @@ function initializeDensityDots() {
         
         // Generate dots - ensure they're inside the polygon and respect overlapping precedence
         let attempts = 0;
-        while ((informalCount < informalDots || kplcCount < kplcDots) && attempts < numDots * 20) {
+        while ((informalCount < informalDots || kplcCount < kplcDots) && attempts < numDots * 30) {
             attempts++;
-            const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
-            const lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+            
+            // Determine which provision type to assign based on current counts
+            let provisionType;
+            if (informalCount >= informalDots) {
+                // Only need KPLC dots now
+                provisionType = "KPLC";
+            } else if (kplcCount >= kplcDots) {
+                // Only need Informal dots now
+                provisionType = "Informal";
+            } else {
+                // Still need both types - decide randomly weighted by remaining proportion
+                const remainingInformalProp = (informalDots - informalCount) / 
+                    ((informalDots - informalCount) + (kplcDots - kplcCount));
+                provisionType = Math.random() < remainingInformalProp ? "Informal" : "KPLC";
+            }
+            
+            // Generate a random point in the polygon's bounds
+            let lat, lng;
+            
+            // Only cluster KPLC dots around transformers, informal dots remain random
+            // Exclude Buildings settlement from clustering
+            if (provisionType === "KPLC" && areaName !== "Buildings" && clusterAroundTransformers && hasTransformersForClustering && Math.random() < clusteringStrength) {
+                // Clustering mode - use biased location selection around a transformer in this settlement
+                
+                // Randomly select one of the transformers in this settlement
+                const randomTransformerIndex = Math.floor(Math.random() * settlementTransformers.length);
+                const transformerPoint = settlementTransformers[randomTransformerIndex];
+                
+                // Calculate a random point near the transformer (within a reasonable radius)
+                // Use smaller radius for denser clustering
+                const radius = 0.0025; // ~250 meters
+                const angle = Math.random() * 2 * Math.PI;
+                // Use exponential distribution to cluster more densely closer to transformer
+                const distance = Math.pow(Math.random(), 2) * radius;
+                
+                // Convert to cartesian
+                const dx = distance * Math.cos(angle);
+                const dy = distance * Math.sin(angle);
+                
+                // Add the offset to transformer location
+                lat = transformerPoint.lat + dy;
+                lng = transformerPoint.lng + dx;
+                
+                // Ensure the point is within bounds
+                if (lat < bounds.getSouth() || lat > bounds.getNorth() || 
+                    lng < bounds.getWest() || lng > bounds.getEast()) {
+                    // Fall back to random point if outside bounds
+                    lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
+                    lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+                }
+            } else {
+                // Standard mode - completely random point within bounds
+                lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
+                lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+            }
+            
             const point = L.latLng(lat, lng);
             
             // Skip points in exclusion zones
@@ -1155,21 +1669,6 @@ function initializeDensityDots() {
             }
             if (skipDueToOverlap) {
                 continue;
-            }
-            
-            // Determine which provision type to assign based on current counts
-            let provisionType;
-            if (informalCount >= informalDots) {
-                // Only need KPLC dots now
-                provisionType = "KPLC";
-            } else if (kplcCount >= kplcDots) {
-                // Only need Informal dots now
-                provisionType = "Informal";
-            } else {
-                // Still need both types - decide randomly weighted by remaining proportion
-                const remainingInformalProp = (informalDots - informalCount) / 
-                    ((informalDots - informalCount) + (kplcDots - kplcCount));
-                provisionType = Math.random() < remainingInformalProp ? "Informal" : "KPLC";
             }
             
             // Add the point
@@ -1448,6 +1947,27 @@ document.getElementById('icons-toggle').addEventListener('change', function() {
     } else {
         map.removeLayer(iconsLayer);
     }
+    
+    // Update sub-toggle states
+    const removedToggle = document.getElementById('removed-transformers-toggle');
+    const demolishedToggle = document.getElementById('demolished-transformers-toggle');
+    const estimatedToggle = document.getElementById('estimated-transformers-toggle');
+    
+    removedToggle.disabled = !this.checked;
+    demolishedToggle.disabled = !this.checked;
+    estimatedToggle.disabled = !this.checked;
+    
+    // Update the legend as well
+    const oldLegend = document.querySelector('.transformer-legend');
+    if (oldLegend) {
+        oldLegend.remove();
+    }
+    if (this.checked) {
+        createTransformerLegend().addTo(map);
+    }
+    
+    // Reinitialize transformers
+    initializeTransformers();
     saveSettings();
 });
 
@@ -1467,6 +1987,10 @@ document.getElementById('density-toggle').addEventListener('change', function() 
             svgDensityGroup.style('display', 'none');
         }
     }
+    
+    // Update people per dot calculation
+    setTimeout(updatePeoplePerDot, 50);
+    
     saveSettings();
 });
 
@@ -1521,6 +2045,9 @@ document.getElementById('dot-density-slider').addEventListener('input', function
         settings.dotDensity = densityValue;
         try {
             localStorage.setItem('mukuruMapSettings', JSON.stringify(settings));
+            
+            // Update URL with new settings
+            updateUrlParams(settings);
         } catch (e) {
             console.error('Error saving settings to localStorage:', e);
         }
@@ -1530,6 +2057,7 @@ document.getElementById('dot-density-slider').addEventListener('input', function
 // Apply density changes when slider value changes
 document.getElementById('dot-density-slider').addEventListener('change', function() {
     updateDotDensity();
+    saveSettings();
 });
 
 // Add event listeners to update the people per dot calculation
@@ -1726,6 +2254,9 @@ function initializeDistributionControls() {
         
         // Update the UI
         updateDistributionUI(informalPercentage);
+        
+        // Save settings to URL
+        setTimeout(saveSettings, 300);
     });
     
     // Event listener for slider input (visual update only)
@@ -1750,6 +2281,9 @@ function initializeDistributionControls() {
         
         // Redraw the dots to reflect the new distribution
         updateDistribution();
+        
+        // Save settings to URL
+        saveSettings();
     });
     
     // Function to update the distribution UI
@@ -1928,25 +2462,65 @@ function initializeTransformers_fallback() {
     const sampleTransformers = [
         { id: 1, name: "Sisal", lat: -1.31257272, lng: 36.88417861, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
         { id: 2, name: "Vietnam", lat: -1.31571733, lng: 36.88221482, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
-        { id: 3, name: "Milimani", lat: -1.31732272, lng: 36.88571341, status: "Operational", "in-village": "", "out-of-village": "Mukuru Kwa Njenga", device: "Transformer", type: "Landlord" },
+        { id: 3, name: "Milimani", lat: -1.31732272, lng: 36.88571341, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "Landlord" },
         { id: 4, name: "Removed Transformer", lat: -1.31492633, lng: 36.88173956, status: "Removed", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
         { id: 5, name: "Demolished Transformer", lat: -1.31782149, lng: 36.88352488, status: "Demolished", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "KPLC" },
-        { id: 6, name: "Transformer - Rurie", lat: -1.31429822, lng: 36.87107608, status: "Operational", "in-village": "Mukuru Kwa Reuben", "out-of-village": "", device: "Transformer", type: "KPLC" }
+        { id: 6, name: "Out-of-village Transformer", lat: -1.31300000, lng: 36.88000000, status: "Operational", "in-village": "", "out-of-village": "External Area", device: "Transformer", type: "KPLC" },
+        { id: 7, name: "Both In & Out Transformer", lat: -1.31400000, lng: 36.88100000, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "Mukuru Kwa Reuben", device: "Transformer", type: "KPLC" },
+        { id: "E1", name: "Estimated Transformer", lat: -1.31600000, lng: 36.88200000, status: "Operational", "in-village": "Mukuru Kwa Njenga", "out-of-village": "", device: "Transformer", type: "Estimated" }
     ];
-    
-    // Get current group opacities
-    const groupOpacities = savedSettings.groupOpacity || {
-        "Mukuru Kwa Njenga": 0.8,
-        "Mukuru Kwa Reuben": 0.8
-    };
-    
-    console.log("Current opacities (fallback):", groupOpacities);
     
     // Add each transformer to the map
     sampleTransformers.forEach(transformer => {
         // Check which types of transformers to show
         const showRemovedTransformers = document.getElementById('removed-transformers-toggle').checked;
         const showDemolishedTransformers = document.getElementById('demolished-transformers-toggle').checked;
+        const showEstimatedTransformers = document.getElementById('estimated-transformers-toggle').checked; // NEW: Check estimated toggle
+        
+        // Check if this is an estimated transformer that should be hidden
+        if (transformer.type === "Estimated" && !showEstimatedTransformers) {
+            return; // Skip this transformer if it's estimated and toggle is off
+        }
+        
+        // Check if transformer has in-village and out-of-village attributes
+        const hasInVillage = transformer["in-village"] && transformer["in-village"].trim() !== "";
+        const hasOutOfVillage = transformer["out-of-village"] && transformer["out-of-village"].trim() !== "";
+        
+        // Check group opacity for in-village
+        const inVillageGroup = transformer["in-village"];
+        let inVillageOpacity = 1.0; // Default opacity
+        
+        if (inVillageGroup === "Mukuru Kwa Njenga") {
+            inVillageOpacity = parseFloat(document.getElementById('njenga-opacity-slider').value);
+        } else if (inVillageGroup === "Mukuru Kwa Reuben") {
+            inVillageOpacity = parseFloat(document.getElementById('reuben-opacity-slider').value);
+        }
+        
+        // Check group opacity for out-of-village (if it's one of our tracked groups)
+        const outOfVillageGroup = transformer["out-of-village"];
+        let outOfVillageOpacity = 1.0; // Default to visible
+        
+        if (hasOutOfVillage) {
+            if (outOfVillageGroup === "Mukuru Kwa Njenga") {
+                outOfVillageOpacity = parseFloat(document.getElementById('njenga-opacity-slider').value);
+            } else if (outOfVillageGroup === "Mukuru Kwa Reuben") {
+                outOfVillageOpacity = parseFloat(document.getElementById('reuben-opacity-slider').value);
+            }
+        }
+        
+        // Determine visibility based on rules:
+        // 1. Hide if it has no out-of-village attribute and in-village opacity is 0
+        // 2. Hide if both in-village and out-of-village opacities are 0
+        // 3. Hide if it has ONLY out-of-village attribute (no in-village) and out-of-village opacity is 0
+        // 4. Show otherwise
+        const hideTransformer = 
+            (inVillageOpacity === 0 && !hasOutOfVillage) || 
+            (inVillageOpacity === 0 && hasOutOfVillage && outOfVillageOpacity === 0) ||
+            (!hasInVillage && hasOutOfVillage && outOfVillageOpacity === 0);
+        
+        if (hideTransformer) {
+            return; // Skip this transformer
+        }
         
         // Only display transformers with appropriate criteria
         if (transformer.device === "Transformer" && 
@@ -1954,25 +2528,13 @@ function initializeTransformers_fallback() {
              (transformer.status === "Removed" && showRemovedTransformers) ||
              (transformer.status === "Demolished" && showDemolishedTransformers))) {
             
-            // STEP 1: CHECK VILLAGE OPACITY
-            // If transformer is in Mukuru Kwa Reuben and opacity is 0, skip it
-            if (transformer["in-village"] === "Mukuru Kwa Reuben" && 
-                groupOpacities["Mukuru Kwa Reuben"] === 0) {
-                return; // Skip this transformer
-            }
-            
-            // If transformer is in Mukuru Kwa Njenga and opacity is 0, skip it
-            if (transformer["in-village"] === "Mukuru Kwa Njenga" && 
-                groupOpacities["Mukuru Kwa Njenga"] === 0) {
-                return; // Skip this transformer
-            }
-            
             // Only check exclusion zones for operational and removed transformers
             // Don't apply the exclusion zone rule to demolished transformers
             if (transformer.status !== "Demolished" && document.getElementById('exclusion-toggle').checked) {
                 const point = L.latLng(transformer.lat, transformer.lng);
                 if (isPointInExclusionZone(point)) {
-                    return; // Skip this transformer
+                    console.log(`Skipping fallback transformer in exclusion zone: ${transformer.name}`);
+                    return;
                 }
             }
             
@@ -1980,10 +2542,14 @@ function initializeTransformers_fallback() {
             let boltColor;
             
             if (transformer.status === "Operational") {
-                // For operational transformers, use the in-village/out-of-village logic
-                // Yellow inside, orange outside
-                boltColor = transformer["out-of-village"] && !transformer["in-village"] 
-                    ? "#FF8C00" : "#FFD700";
+                // Special case: If in-village opacity is 0 but out-of-village opacity is not 0,
+                // then show as out-of-village regardless of in-village status
+                if (inVillageOpacity === 0 && hasOutOfVillage && outOfVillageOpacity > 0) {
+                    boltColor = "#FF8C00"; // Orange for out-of-village
+                } else {
+                    // Otherwise, if both are present, prioritize in-village
+                    boltColor = (hasOutOfVillage && !hasInVillage) ? "#FF8C00" : "#FFD700"; // Orange if ONLY out-of-village, yellow otherwise
+                }
             } else if (transformer.status === "Removed") {
                 // Gray for removed transformers
                 boltColor = "#888888";
@@ -1992,10 +2558,16 @@ function initializeTransformers_fallback() {
                 boltColor = "#FF0000";
             }
             
+            // Special styling for estimated transformers
+            let estimatedClass = "";
+            if (transformer.type === "Estimated") {
+                estimatedClass = "estimated-transformer";
+            }
+            
             // Create a custom transformer icon using a pole (custom div) + lightning bolt (Font Awesome)
             const transformerIcon = L.divIcon({
-                className: 'transformer-icon',
-                html: `<div><span class="fa-bar"></span><i class="fa-solid fa-bolt" style="color: ${boltColor};"></i></div>`,
+                className: `transformer-icon ${estimatedClass}`,
+                html: `<div><span class="fa-bar"></span><i class="fa-solid fa-bolt ${estimatedClass}" style="color: ${boltColor};"></i></div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 40],  // Align exactly at the bottom of the pole
                 popupAnchor: [0, -40]
@@ -2013,7 +2585,7 @@ function initializeTransformers_fallback() {
                         </tr>
                         <tr>
                             <td>Village:</td>
-                            <td>${transformer["in-village"] || transformer["out-of-village"] || "Unknown"}</td>
+                            <td>${transformer["in-village"]}</td>
                         </tr>
                         <tr>
                             <td>Type:</td>
@@ -2023,6 +2595,7 @@ function initializeTransformers_fallback() {
                             <td>Device:</td>
                             <td>${transformer.device}</td>
                         </tr>
+                        ${hasOutOfVillage ? `<tr><td>Serves:</td><td>${transformer["out-of-village"]}</td></tr>` : ''}
                     </table>
                 </div>
             `).addTo(iconsLayer);
@@ -2293,9 +2866,6 @@ function updateGroupOpacity(groupName, opacityValue) {
             element.style.opacity = opacityValue === 0 ? 0 : 1.0;
         }
     });
-    
-    // 4. Reinitialize transformers to update their visibility based on the new opacity
-    initializeTransformers();
 }
 
 // Apply initial group opacities
@@ -2466,32 +3036,32 @@ function createTransformerLegend() {
                 statusTypes.push({ type: "Demolished", color: "#FF0000" }); // Red
             }
             
-            // Create the rows
-            const row1 = document.createElement('tr');
-            const row2 = document.createElement('tr');
+            // NOTE: "Estimated" entry removed from legend as requested
+            
+            // Create the rows - add extra row if needed for status entries
+            const rows = [];
+            for (let i = 0; i < Math.max(locationTypes.length, statusTypes.length); i++) {
+                rows.push(document.createElement('tr'));
+            }
             
             // Create the location column (always shown)
-            const locationCell1 = createLegendCell(locationTypes[0]);
-            const locationCell2 = createLegendCell(locationTypes[1]);
-            row1.appendChild(locationCell1);
-            row2.appendChild(locationCell2);
+            locationTypes.forEach((locationType, i) => {
+                const locationCell = createLegendCell(locationType);
+                rows[i].appendChild(locationCell);
+            });
             
             // Create the status column (only if needed)
             if (showStatusColumn) {
-                if (statusTypes.length > 0) {
-                    const statusCell1 = createLegendCell(statusTypes[0]);
-                    row1.appendChild(statusCell1);
-                }
-                
-                if (statusTypes.length > 1) {
-                    const statusCell2 = createLegendCell(statusTypes[1]);
-                    row2.appendChild(statusCell2);
-                }
+                statusTypes.forEach((statusType, i) => {
+                    const statusCell = createLegendCell(statusType);
+                    rows[i].appendChild(statusCell);
+                });
             }
             
             // Add rows to table
-            table.appendChild(row1);
-            table.appendChild(row2);
+            rows.forEach(row => {
+                table.appendChild(row);
+            });
             
             // Add table to container
             container.appendChild(table);
@@ -2535,6 +3105,13 @@ function createTransformerLegend() {
         bolt.style.fontSize = '14px';
         bolt.style.color = item.color;
         
+        // Apply special styling for estimated transformers
+        if (item.special === "dotted") {
+            bolt.style.border = '1px dotted black';
+            bolt.style.padding = '2px';
+            bolt.style.borderRadius = '50%';
+        }
+        
         iconDiv.appendChild(pole);
         iconDiv.appendChild(bolt);
         
@@ -2553,68 +3130,21 @@ function createTransformerLegend() {
     return new TransformerLegendControl();
 }
 
-// Update transformer toggle event listeners to refresh the legend when toggles change
-document.addEventListener('DOMContentLoaded', function() {
-    // Set initial checkbox states based on saved settings
-    document.getElementById('removed-transformers-toggle').checked = savedSettings.toggles.removedTransformers;
-    document.getElementById('demolished-transformers-toggle').checked = savedSettings.toggles.demolishedTransformers;
-    
-    // Add event listeners for the toggles
-    document.getElementById('removed-transformers-toggle').addEventListener('change', function() {
-        // Remove existing legend and add it again to refresh
-        const oldLegend = document.querySelector('.transformer-legend');
-        if (oldLegend) {
-            oldLegend.remove();
-        }
-        createTransformerLegend().addTo(map);
-        
-        // Reinitialize transformers to reflect the new toggle state
-        initializeTransformers();
-        saveSettings();
-    });
-    
-    document.getElementById('demolished-transformers-toggle').addEventListener('change', function() {
-        // Remove existing legend and add it again to refresh
-        const oldLegend = document.querySelector('.transformer-legend');
-        if (oldLegend) {
-            oldLegend.remove();
-        }
-        createTransformerLegend().addTo(map);
-        
-        // Reinitialize transformers to reflect the new toggle state
-        initializeTransformers();
-        saveSettings();
-    });
-    
-    // Ensure transformer sub-toggles are disabled if the main toggle is off
-    document.getElementById('icons-toggle').addEventListener('change', function() {
-        const isEnabled = this.checked;
-        const removedToggle = document.getElementById('removed-transformers-toggle');
-        const demolishedToggle = document.getElementById('demolished-transformers-toggle');
-        
-        if (!isEnabled) {
-            // If transformers are turned off, hide the icons
-            map.removeLayer(iconsLayer);
-        } else {
-            // If transformers are turned on, show the icons
-            map.addLayer(iconsLayer);
-        }
-        
-        // Update sub-toggle states
-        removedToggle.disabled = !isEnabled;
-        demolishedToggle.disabled = !isEnabled;
-        
-        // Update the legend as well
-        const oldLegend = document.querySelector('.transformer-legend');
-        if (oldLegend) {
-            oldLegend.remove();
-        }
-        if (isEnabled) {
-            createTransformerLegend().addTo(map);
-        }
-        
-        // Reinitialize transformers
-        initializeTransformers();
-        saveSettings();
-    });
+// Add the cluster dots toggle event listener
+document.getElementById('cluster-dots-toggle').addEventListener('change', function() {
+    // Regenerate dots with new clustering setting
+    updateDotDensity();
+    saveSettings();
+});
+
+// Add event listener to capture distribution changes and save to URL
+document.getElementById('informal-slider').addEventListener('change', function() {
+    // Save settings after a short delay
+    setTimeout(saveSettings, 300);
+});
+
+// Save settings when changing distribution settlement
+document.getElementById('settlement-select').addEventListener('change', function() {
+    // Save settings after applying the change
+    setTimeout(saveSettings, 300);
 });

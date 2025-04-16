@@ -118,7 +118,7 @@
       "in-village": "Mukuru Kwa Njenga",
       "out-of-village": "",
       "type": "Landlord",
-      "device": "Other"
+      "device": "Transformer"
     },
     {
       "id": 11,
@@ -130,7 +130,7 @@
       "in-village": "Mukuru Kwa Njenga",
       "out-of-village": "",
       "type": "KPLC",
-      "device": "Other"
+      "device": "Transformer"
     },
     {
       "id": 12,
@@ -142,7 +142,7 @@
       "in-village": "Mukuru Kwa Njenga",
       "out-of-village": "",
       "type": "KPLC",
-      "device": "Other"
+      "device": "Transformer"
     },
     {
       "id": 13,
