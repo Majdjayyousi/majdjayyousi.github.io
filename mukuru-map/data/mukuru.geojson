@@ -278,7 +278,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Sisal"}
         },
         {
             "type": "Feature",
@@ -436,7 +436,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Wape Wape"}
         },
         {
             "type": "Feature",
@@ -540,7 +540,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Buildings"}
         },
         {
             "type": "Feature",
@@ -871,12 +871,12 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Milimani"}
         },
         {
             "type": "Feature",
             "id": "sm3176d85c",
-            "geometry": {
+            "xgeometry": {
                 "type": "LineString",
                 "coordinates": [
                     [
@@ -894,7 +894,7 @@
         {
             "type": "Feature",
             "id": "sme43be936",
-            "geometry": {
+            "xgeometry": {
                 "type": "LineString",
                 "coordinates": [
                     [
@@ -1173,7 +1173,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Vietnam"}
         },
         {
             "type": "Feature",
@@ -1320,7 +1320,7 @@
                 ]
             },
             "properties": {
-                "description": "ss"
+                "id": "Riara"
             }
         },
         {
@@ -1583,7 +1583,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Zone 48"}
         },
         {
             "type": "Feature",
@@ -1762,7 +1762,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Moto Moto"}
         },
         {
             "type": "Feature",
@@ -2024,12 +2024,12 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Wesinya"}
         },
         {
             "type": "Feature",
             "id": "smc4253dd3",
-            "geometry": {
+            "xgeometry": {
                 "type": "LineString",
                 "coordinates": [
                     [
@@ -2278,12 +2278,12 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Diamond"}
         },
         {
             "type": "Feature",
             "id": "smbc03ef32",
-            "geometry": {
+            "xgeometry": {
                 "type": "LineString",
                 "coordinates": [
                     [
@@ -2404,7 +2404,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Railway"}
         },
         {
             "type": "Feature",
@@ -2496,7 +2496,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Gateway"}
         },
         {
             "type": "Feature",
@@ -2740,7 +2740,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Kosovo"}
         },
         {
             "type": "Feature",
@@ -2996,12 +2996,12 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Rurie"}
         },
         {
             "type": "Feature",
             "id": "sm90eccc61",
-            "geometry": {
+            "xgeometry": {
                 "type": "LineString",
                 "coordinates": [
                     [
@@ -3182,7 +3182,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Simba Cool"}
         },
         {
             "type": "Feature",
@@ -3290,7 +3290,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Bins"}
         },
         {
             "type": "Feature",
@@ -3486,7 +3486,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Feed the Children"}
         },
         {
             "type": "Feature",
@@ -3658,7 +3658,7 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Mombasa"}
         },
         {
             "type": "Feature",
@@ -3862,12 +3862,12 @@
                     ]
                 ]
             },
-            "properties": {}
+            "properties": {"id":"Gatope"}
         },
         {
             "type": "Feature",
             "id": "sm992893fb",
-            "geometry": {
+            "xgeometry": {
                 "type": "LineString",
                 "coordinates": [
                     [
@@ -4000,7 +4000,7 @@
                 ]
             },
             "properties": {
-                "description": "<p><b>      Feed the Children</b></p>",
+                "description": "<p><b>Feed the Children</b></p>",
                 "rotation": -70
             }
         },

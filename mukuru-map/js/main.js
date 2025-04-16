@@ -605,34 +605,42 @@ function initializeContours() {
     polygonFeatures.forEach((feature, index) => {
         const coordinates = feature.geometry.coordinates[0];
         
-        // Find the closest point label to this polygon to determine its name
-        const centroidLat = coordinates.reduce((sum, coord) => sum + coord[1], 0) / coordinates.length;
-        const centroidLng = coordinates.reduce((sum, coord) => sum + coord[0], 0) / coordinates.length;
+        // Get area name directly from polygon's properties
+        let areaName = `Area ${index + 1}`; // Default fallback name
         
-        const pointFeatures = geoJSONData.features.filter(f => 
-            f.geometry && f.geometry.type === 'Point' && 
-            f.properties && f.properties.description
-        );
-        
-        let closestPoint = null;
-        let minDistance = Infinity;
-        
-        pointFeatures.forEach(point => {
-            const pointCoord = point.geometry.coordinates;
-            const distance = Math.sqrt(
-                Math.pow(centroidLat - pointCoord[1], 2) + 
-                Math.pow(centroidLng - pointCoord[0], 2)
+        // Extract the id from the polygon's properties
+        if (feature.properties && feature.properties.id) {
+            areaName = feature.properties.id;
+        } else {
+            // Fallback to the old method if id property is not available
+            // Find the closest point label to this polygon to determine its name
+            const centroidLat = coordinates.reduce((sum, coord) => sum + coord[1], 0) / coordinates.length;
+            const centroidLng = coordinates.reduce((sum, coord) => sum + coord[0], 0) / coordinates.length;
+            
+            const pointFeatures = geoJSONData.features.filter(f => 
+                f.geometry && f.geometry.type === 'Point' && 
+                f.properties && f.properties.description
             );
             
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestPoint = point;
+            let closestPoint = null;
+            let minDistance = Infinity;
+            
+            pointFeatures.forEach(point => {
+                const pointCoord = point.geometry.coordinates;
+                const distance = Math.sqrt(
+                    Math.pow(centroidLat - pointCoord[1], 2) + 
+                    Math.pow(centroidLng - pointCoord[0], 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPoint = point;
+                }
+            });
+            
+            if (closestPoint && minDistance < 0.01) {
+                areaName = extractDescription(closestPoint.properties.description);
             }
-        });
-        
-        let areaName = `Area ${index + 1}`;
-        if (closestPoint && minDistance < 0.01) {
-            areaName = extractDescription(closestPoint.properties.description);
         }
         
         // Create a Turf polygon from the GeoJSON coordinates
@@ -1240,38 +1248,46 @@ function calculateSettlementCenters() {
         centroidLat /= coordinates.length;
         centroidLng /= coordinates.length;
         
-        // Find the closest point feature to identify this polygon
-        let closestPoint = null;
-        let minDistance = Infinity;
-        
-        pointFeatures.forEach(point => {
-            const pointCoord = point.geometry.coordinates;
-            const distance = Math.sqrt(
-                Math.pow(centroidLat - pointCoord[1], 2) + 
-                Math.pow(centroidLng - pointCoord[0], 2)
-            );
+        // Get settlement name directly from polygon properties
+        let settlementName;
+        if (feature.properties && feature.properties.id) {
+            settlementName = feature.properties.id;
+        } else {
+            // Fallback to finding the closest point
+            let closestPoint = null;
+            let minDistance = Infinity;
             
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestPoint = point;
+            pointFeatures.forEach(point => {
+                const pointCoord = point.geometry.coordinates;
+                const distance = Math.sqrt(
+                    Math.pow(centroidLat - pointCoord[1], 2) + 
+                    Math.pow(centroidLng - pointCoord[0], 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPoint = point;
+                }
+            });
+            
+            // Only proceed if we found a close point
+            if (closestPoint && minDistance < 0.01) {
+                settlementName = extractDescription(closestPoint.properties.description);
+            } else {
+                return; // Skip if we can't identify the settlement
             }
-        });
-        
-        // Only proceed if we found a close point
-        if (closestPoint && minDistance < 0.01) {
-            const settlementName = extractDescription(closestPoint.properties.description);
-            
-            // Don't place transformers in exclusion zones
-            const center = L.latLng(centroidLat, centroidLng);
-            if (isPointInExclusionZone(center)) {
-                return;
-            }
-            
-            centers[settlementName] = {
-                lat: centroidLat,
-                lng: centroidLng
-            };
         }
+        
+        // Don't place transformers in exclusion zones
+        const center = L.latLng(centroidLat, centroidLng);
+        if (isPointInExclusionZone(center)) {
+            return;
+        }
+        
+        centers[settlementName] = {
+            lat: centroidLat,
+            lng: centroidLng
+        };
     });
     
     return centers;
@@ -1423,35 +1439,46 @@ function initializeDensityDots() {
         const coordinates = feature.geometry.coordinates[0];
         const latlngs = coordinates.map(coord => [coord[1], coord[0]]);
         
-        // Find name for this polygon
-        let centroidLat = 0, centroidLng = 0;
-        coordinates.forEach(coord => {
-            centroidLng += coord[0];
-            centroidLat += coord[1];
-        });
-        centroidLat /= coordinates.length;
-        centroidLng /= coordinates.length;
+        // Get area name directly from polygon's properties
+        let areaName = `Area ${index + 1}`; // Default fallback name
         
-        // Find the closest point feature
-        let closestPoint = null;
-        let minDistance = Infinity;
-        
-        pointFeatures.forEach(point => {
-            const pointCoord = point.geometry.coordinates;
-            const distance = Math.sqrt(
-                Math.pow(centroidLat - pointCoord[1], 2) + 
-                Math.pow(centroidLng - pointCoord[0], 2)
-            );
+        // Extract the id from the polygon's properties
+        if (feature.properties && feature.properties.id) {
+            areaName = feature.properties.id;
+        } else {
+            // Fallback to the old method if id property is not available
+            // Find a name for this polygon by looking for a nearby point with description
             
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestPoint = point;
+            // Calculate polygon centroid
+            let centroidLat = 0, centroidLng = 0;
+            coordinates.forEach(coord => {
+                centroidLng += coord[0];
+                centroidLat += coord[1];
+            });
+            centroidLat /= coordinates.length;
+            centroidLng /= coordinates.length;
+            
+            // Find the closest point feature
+            let closestPoint = null;
+            let minDistance = Infinity;
+            
+            pointFeatures.forEach(point => {
+                const pointCoord = point.geometry.coordinates;
+                const distance = Math.sqrt(
+                    Math.pow(centroidLat - pointCoord[1], 2) + 
+                    Math.pow(centroidLng - pointCoord[0], 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPoint = point;
+                }
+            });
+            
+            // Use the description from the closest point if found and within reasonable distance
+            if (closestPoint && minDistance < 0.01) { // Threshold distance
+                areaName = extractDescription(closestPoint.properties.description);
             }
-        });
-        
-        let areaName = `Area ${index + 1}`;
-        if (closestPoint && minDistance < 0.01) {
-            areaName = extractDescription(closestPoint.properties.description);
         }
         
         // Store polygon by name for later use
@@ -1463,38 +1490,46 @@ function initializeDensityDots() {
         const coordinates = feature.geometry.coordinates[0];
         const latlngs = coordinates.map(coord => [coord[1], coord[0]]);
         
-        // Find a name for this polygon by looking for a nearby point with description
-        let areaName = `Area ${index + 1}`;
+        // Get area name directly from polygon's properties
+        let areaName = `Area ${index + 1}`; // Default fallback name
         
-        // Calculate polygon centroid
-        let centroidLat = 0, centroidLng = 0;
-        coordinates.forEach(coord => {
-            centroidLng += coord[0];
-            centroidLat += coord[1];
-        });
-        centroidLat /= coordinates.length;
-        centroidLng /= coordinates.length;
-        
-        // Find the closest point feature
-        let closestPoint = null;
-        let minDistance = Infinity;
-        
-        pointFeatures.forEach(point => {
-            const pointCoord = point.geometry.coordinates;
-            const distance = Math.sqrt(
-                Math.pow(centroidLat - pointCoord[1], 2) + 
-                Math.pow(centroidLng - pointCoord[0], 2)
-            );
+        // Extract the id from the polygon's properties
+        if (feature.properties && feature.properties.id) {
+            areaName = feature.properties.id;
+        } else {
+            // Fallback to the old method if id property is not available
+            // Find a name for this polygon by looking for a nearby point with description
             
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestPoint = point;
+            // Calculate polygon centroid
+            let centroidLat = 0, centroidLng = 0;
+            coordinates.forEach(coord => {
+                centroidLng += coord[0];
+                centroidLat += coord[1];
+            });
+            centroidLat /= coordinates.length;
+            centroidLng /= coordinates.length;
+            
+            // Find the closest point feature
+            let closestPoint = null;
+            let minDistance = Infinity;
+            
+            pointFeatures.forEach(point => {
+                const pointCoord = point.geometry.coordinates;
+                const distance = Math.sqrt(
+                    Math.pow(centroidLat - pointCoord[1], 2) + 
+                    Math.pow(centroidLng - pointCoord[0], 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPoint = point;
+                }
+            });
+            
+            // Use the description from the closest point if found and within reasonable distance
+            if (closestPoint && minDistance < 0.01) { // Threshold distance
+                areaName = extractDescription(closestPoint.properties.description);
             }
-        });
-        
-        // Use the description from the closest point if found and within reasonable distance
-        if (closestPoint && minDistance < 0.01) { // Threshold distance
-            areaName = extractDescription(closestPoint.properties.description);
         }
         
         // Create a polygon object for point-in-polygon testing
@@ -2406,13 +2441,16 @@ function initializeContours_fallback() {
         ];
         
         const groupName = i < 3 ? "Mukuru Kwa Njenga" : "Mukuru Kwa Reuben";
-        const areaName = i < 3 ? "Mukuru kwa Njenga" : "Mukuru kwa Reuben";
+        // Use a more realistic area name that follows the same pattern
+        const areaName = i < 3 ? 
+            (i === 0 ? "Sisal" : i === 1 ? "Vietnam" : "Milimani") : 
+            (i === 3 ? "Gateway" : "Rurie");
         
         const polyline = L.polyline(contourPolygon, {
             color: getSettlementColor(areaName, "Informal"),  // Use one of the colors
             weight: 2,
             opacity: 0.7,
-            className: 'contour'
+            className: `contour contour-${areaName.replace(/\s+/g, '-').toLowerCase()}`
         }).addTo(contoursLayer);
         
         polyline._path.setAttribute('data-group', groupName);
@@ -2427,9 +2465,10 @@ function initializeContours_fallback() {
 
 function initializeLabels_fallback() {
     const sampleLabels = [
-        { name: "Mukuru kwa Njenga", lat: -1.3097, lng: 36.8718, group: "Mukuru Kwa Njenga", rotation: 15 },
-        { name: "Mukuru kwa Reuben", lat: -1.3150, lng: 36.8600, group: "Mukuru Kwa Reuben" },
-        { name: "Viwandani", lat: -1.3050, lng: 36.8650, group: "Mukuru Kwa Reuben", rotation: -10 }
+        { name: "Sisal", lat: -1.3097, lng: 36.8718, group: "Mukuru Kwa Njenga", rotation: 15 },
+        { name: "Vietnam", lat: -1.3150, lng: 36.8600, group: "Mukuru Kwa Njenga" },
+        { name: "Gateway", lat: -1.3050, lng: 36.8650, group: "Mukuru Kwa Reuben", rotation: -10 },
+        { name: "Rurie", lat: -1.3080, lng: 36.8700, group: "Mukuru Kwa Reuben" }
     ];
     
     sampleLabels.forEach(label => {
@@ -2646,6 +2685,10 @@ function initializeDensityDots_fallback() {
     let informalCount = 0;
     let kplcCount = 0;
     
+    // Define a consistent area name for the fallback
+    const areaName = "Sisal"; // Use a real settlement name
+    const groupName = "Mukuru Kwa Njenga"; // Consistent with our settlement groups
+    
     // Generate points inside the polygon
     let attempts = 0;
     while ((informalCount < informalTarget || kplcCount < kplcTarget) && attempts < 2000) {
@@ -2694,8 +2737,7 @@ function initializeDensityDots_fallback() {
         dots.forEach(dot => {
             const point = map.latLngToLayerPoint(L.latLng(dot.lat, dot.lng));
             // Determine color based on provision type
-            const groupName = "Mukuru Kwa Njenga";
-            const dotColor = groupColors[groupName][dot.provisionType];
+            const dotColor = getSettlementColor(areaName, dot.provisionType);
             
             svgDensityGroup.append('circle')
                 .attr('class', 'density-dot')
