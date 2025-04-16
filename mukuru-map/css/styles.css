@@ -1,0 +1,337 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+h1 {
+    color: #2c3e50;
+}
+
+.map-container {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 120px);
+}
+
+#map {
+    flex: 1;
+    height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.controls {
+    width: 250px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+/* Styling for webkit scrollbars in the controls panel */
+.controls::-webkit-scrollbar {
+    width: 8px;
+}
+
+.controls::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.controls::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.controls::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+.controls h3 {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    color: #2c3e50;
+    margin-top: 20px;
+}
+
+.controls h3:first-of-type {
+    margin-top: 0;
+}
+
+.layer-control {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.layer-control input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.layer-control label {
+    cursor: pointer;
+}
+
+/* Slider controls */
+.slider-control {
+    margin-bottom: 15px;
+}
+
+.slider-control label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.slider-control input[type="range"] {
+    width: 100%;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+#opacity-value {
+    font-size: 12px;
+    color: #666;
+    float: right;
+}
+
+/* Custom styling for Leaflet */
+.leaflet-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Leaflet Layer Control styling */
+.leaflet-control-layers {
+    border-radius: 6px !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+.leaflet-control-layers-expanded {
+    padding: 10px 12px !important;
+    background-color: white !important;
+    border: none !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-control-layers-selector {
+    margin-right: 8px !important;
+}
+
+.leaflet-control-layers-base label {
+    margin-bottom: 5px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.leaflet-control-layers-base span {
+    margin-left: 5px !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .map-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    #map {
+        height: 60vh;
+        margin-bottom: 20px;
+    }
+    
+    .controls {
+        width: 100%;
+    }
+}
+
+/* Dot density styling */
+.density-dot {
+    fill: #3498db;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.boundary {
+    fill: none;
+    stroke: #2c3e50;
+    stroke-width: 1.5;
+}
+
+.contour {
+    fill: none;
+    stroke: #2c3e50;
+    stroke-width: 2;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 0 0 3px white, 0 0 3px white, 0 0 3px white, 0 0 3px white;
+    color: #2c3e50;
+}
+
+.poi-icon {
+    cursor: pointer;
+}
+
+/* Toggle button styles */
+.layer-control input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    background-color: #fff;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.layer-control input[type="checkbox"]:checked {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.layer-control input[type="checkbox"]:checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    position: absolute;
+}
+
+/* Add any necessary CSS here to style the percentage distribution controls */
+.percentage-display {
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.percentage-bar {
+    display: flex;
+    height: 20px;
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.percentage-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+
+.distribution-control {
+    margin-bottom: 10px;
+}
+
+#settlement-select {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+#update-distribution-btn {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#update-distribution-btn:hover {
+    background-color: #34495e;
+}
+
+#informal-bar, #kplc-bar {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.dot-info {
+    font-size: 12px;
+    font-style: italic;
+    color: #666;
+    margin-top: -5px;
+    margin-bottom: 15px;
+    text-align: center;
+    background-color: #f9f9f9;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.discrete-slider-container {
+    width: 100%;
+    position: relative;
+    margin-bottom: 5px;
+}
+
+.discrete-slider-container input[type="range"] {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.density-labels {
+    display: flex;
+    justify-content: center;
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Styling for datalist ticks */
+datalist {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 10px;
+}
+
+datalist option {
+    padding: 0;
+    height: 10px;
+}
+
+/* Add this to the CSS file */
+.sub-control {
+    margin-left: 20px;
+    position: relative;
+    font-size: 0.9em;
+}
+
+.sub-control::before {
+    content: '↳';
+    position: absolute;
+    left: -15px;
+    color: #666;
+} 

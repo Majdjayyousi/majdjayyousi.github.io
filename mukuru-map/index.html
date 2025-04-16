@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mukuru Interactive Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mukuru Interactive Map</h1>
+        </header>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <div class="controls">
+                <h3>Layers</h3>
+                <div class="layer-control">
+                    <input type="checkbox" id="contours-toggle" checked>
+                    <label for="contours-toggle">Contour Lines</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="labels-toggle" checked>
+                    <label for="labels-toggle">Labels</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="icons-toggle" checked>
+                    <label for="icons-toggle">Transformers</label>
+                </div>
+                <div class="layer-control sub-control">
+                    <input type="checkbox" id="removed-transformers-toggle">
+                    <label for="removed-transformers-toggle">Show Removed</label>
+                </div>
+                <div class="layer-control sub-control">
+                    <input type="checkbox" id="demolished-transformers-toggle">
+                    <label for="demolished-transformers-toggle">Show Demolished</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="density-toggle" checked>
+                    <label for="density-toggle">Density Dots</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="exclusion-toggle" checked>
+                    <label for="exclusion-toggle">Exclusion Zones</label>
+                </div>
+                
+                <h3>Background</h3>
+                <div class="slider-control">
+                    <label for="opacity-slider">Map Opacity:</label>
+                    <input type="range" id="opacity-slider" min="0.1" max="1.0" step="0.1" value="0.7">
+                    <span id="opacity-value">70%</span>
+                </div>
+                
+                <h3>Group Opacity</h3>
+                <div class="slider-control">
+                    <label for="njenga-opacity-slider">Mukuru Kwa Njenga:</label>
+                    <input type="range" id="njenga-opacity-slider" min="0" max="0.8" step="0.1" value="0.8">
+                    <span id="njenga-opacity-value">80%</span>
+                </div>
+                <div class="slider-control">
+                    <label for="reuben-opacity-slider">Mukuru Kwa Reuben:</label>
+                    <input type="range" id="reuben-opacity-slider" min="0" max="0.8" step="0.1" value="0.8">
+                    <span id="reuben-opacity-value">80%</span>
+                </div>
+                
+                <h3>Dot Settings</h3>
+                <div class="slider-control">
+                    <label for="dot-size-slider">Dot Size:</label>
+                    <input type="range" id="dot-size-slider" min="1" max="6" step="0.5" value="3">
+                    <span id="dot-size-value">3px</span>
+                </div>
+                <div class="slider-control">
+                    <label for="dot-density-slider">Dot Density:</label>
+                    <div class="discrete-slider-container">
+                        <input type="range" id="dot-density-slider" min="0" max="4" step="1" value="2" list="density-values">
+                        <datalist id="density-values">
+                            <option value="0" label="Dense"></option>
+                            <option value="1"></option>
+                            <option value="2"></option>
+                            <option value="3"></option>
+                            <option value="4" label="Coarse"></option>
+                        </datalist>
+                    </div>
+                    <div class="density-labels">
+                        <span id="dot-density-label">Medium (100)</span>
+                    </div>
+                </div>
+                <div class="dot-info">
+                    <span id="dot-representation">Each dot represents ~600 people</span>
+                </div>
+                
+                <h3>Distribution Settings</h3>
+                <div class="distribution-control">
+                    <label for="settlement-select">Settlement:</label>
+                    <select id="settlement-select">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="slider-control">
+                    <label for="informal-slider">Informal %:</label>
+                    <input type="range" id="informal-slider" min="0" max="100" step="5" value="50">
+                    <span id="informal-value">50%</span>
+                </div>
+                <div class="percentage-display">
+                    <div class="percentage-bar">
+                        <div id="informal-bar" style="width: 50%; background-color: #d95f02;"></div>
+                        <div id="kplc-bar" style="width: 50%; background-color: #1b9e77;"></div>
+                    </div>
+                    <div class="percentage-labels">
+                        <span>Informal: <span id="informal-percent">50%</span></span>
+                        <span>KPLC: <span id="kplc-percent">50%</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- Turf.js for polygon operations -->
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="js/main.js"></script>
+</body>
+</html> 
