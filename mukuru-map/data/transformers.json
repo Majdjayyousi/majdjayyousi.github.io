@@ -167,6 +167,54 @@
       "out-of-village": "Mukuru Kwa Njenga",
       "type": "Outside",
       "device": "Transformer"
+    },
+    {
+      "id": "E2",
+      "name": "Transformer - Simba Cool",
+      "capacity": "",
+      "lat": -1.317,
+      "lng": 36.870,
+      "status": "Operational",
+      "in-village": "Mukuru Kwa Reuben",
+      "out-of-village": "",
+      "type": "Estimated",
+      "device": "Transformer"
+    },
+    {
+      "id": "E3",
+      "name": "Transformer - Kosovo",
+      "capacity": "",
+      "lat": -1.315,
+      "lng": 36.8745,
+      "status": "Operational",
+      "in-village": "Mukuru Kwa Reuben",
+      "out-of-village": "",
+      "type": "Estimated",
+      "device": "Transformer"
+    },
+    {
+      "id": "E4",
+      "name": "Transformer - Diamond",
+      "capacity": "",
+      "lat": -1.314,
+      "lng": 36.878,
+      "status": "Operational",
+      "in-village": "Mukuru Kwa Reuben",
+      "out-of-village": "",
+      "type": "Estimated",
+      "device": "Transformer"
+    },
+    {
+      "id": "E4",
+      "name": "Transformer - Wesinya",
+      "capacity": "",
+      "lat": -1.311,
+      "lng": 36.881,
+      "status": "Operational",
+      "in-village": "Mukuru Kwa Reuben",
+      "out-of-village": "",
+      "type": "Estimated",
+      "device": "Transformer"
     }
   ]
 } 
