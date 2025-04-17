@@ -1,18 +1,6 @@
 {
   "transformers": [
     {
-      "id": 1,
-      "name": "CBO Transfomer - Milimani",
-      "capacity": "",
-      "lat": -1.31623897,
-      "lng": 36.88450154,
-      "status": "Demolished",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "CBO/Business",
-      "device": "Transformer"
-    },
-    {
       "id": 2,
       "name": "Landlord transformer - Zone 48",
       "capacity": "",
@@ -37,19 +25,19 @@
       "device": "Transformer"
     },
     {
-      "id": 4,
-      "name": "Sidarec transformer - Moto Moto",
+      "id": 5,
+      "name": "Transformer - Trio Building - Moto Moto",
       "capacity": "",
-      "lat": -1.31981441,
-      "lng": 36.88538298,
+      "lat": -1.32107      ,
+      "lng": 36.88579336,
       "status": "Operational",
       "in-village": "Mukuru Kwa Njenga",
       "out-of-village": "",
-      "type": "CBO/Business",
+      "type": "KPLC",
       "device": "Transformer"
     },
     {
-      "id": 5,
+      "id": 6,
       "name": "Current transformer - Moto Moto",
       "capacity": "",
       "lat": -1.32031183,
@@ -61,127 +49,19 @@
       "device": "Transformer"
     },
     {
-      "id": 6,
+      "id": 7,
       "name": "Landlord transformer - Sisal",
       "capacity": "",
       "lat": -1.31395601,
       "lng": 36.88354634,
-      "status": "Demolished",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "Landlord",
-      "device": "Transformer"
-    },
-    {
-      "id": 7,
-      "name": "Mosque transformer - Sisal",
-      "capacity": "",
-      "lat": -1.31443465,
-      "lng": 36.88283589,
-      "status": "Demolished",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 8,
-      "name": "Church transformer - Vietnam",
-      "capacity": "",
-      "lat": -1.31395969,
-      "lng": 36.88151758,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 9,
-      "name": "NMS Transformer - Zone 48",
-      "capacity": "",
-      "lat": -1.32110354,
-      "lng": 36.88700069,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "CBO/Business",
-      "device": "Transformer"
-    },
-    {
-      "id": 10,
-      "name": "Sambaza lines from transformer - Moto Moto",
-      "capacity": "",
-      "lat": -1.32091617,
-      "lng": 36.88621279,
       "status": "Operational",
       "in-village": "Mukuru Kwa Njenga",
       "out-of-village": "",
       "type": "Landlord",
-      "device": "Transformer"
-    },
-    {
-      "id": 11,
-      "name": "Transformer phases - Moto Moto",
-      "capacity": "",
-      "lat": -1.32104947,
-      "lng": 36.88591392,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 12,
-      "name": "Transformer phase - Moto Moto",
-      "capacity": "",
-      "lat": -1.32117139,
-      "lng": 36.88612491,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 13,
-      "name": "Building transformer - Moto Moto",
-      "capacity": "",
-      "lat": -1.32105896,
-      "lng": 36.88609947,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 14,
-      "name": "Small Transformer - Rurie",
-      "capacity": "",
-      "lat": -1.31429822,
-      "lng": 36.87107608,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
-      "type": "KPLC",
       "device": "Transformer"
     },
     {
       "id": 15,
-      "name": "Small transformers - Bins",
-      "capacity": "",
-      "lat": -1.31603484,
-      "lng": 36.86729852,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 16,
       "name": "Transformer - Bins",
       "capacity": "",
       "lat": -1.31625329,
@@ -194,18 +74,6 @@
     },
     {
       "id": 17,
-      "name": "Generator for Safaricom transformer - Rurie",
-      "capacity": "",
-      "lat": -1.31620545,
-      "lng": 36.86961159,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
-      "type": "CBO/Business",
-      "device": "Other"
-    },
-    {
-      "id": 18,
       "name": "Transformer - Rurie",
       "capacity": "",
       "lat": -1.31572949,
@@ -217,7 +85,7 @@
       "device": "Transformer"
     },
     {
-      "id": 19,
+      "id": 18,
       "name": "Transformer - Rurie",
       "capacity": "",
       "lat": -1.31408572,
@@ -229,7 +97,7 @@
       "device": "Transformer"
     },
     {
-      "id": 20,
+      "id": 19,
       "name": "Transformer - Rurie",
       "capacity": "",
       "lat": -1.31348808,
@@ -241,7 +109,7 @@
       "device": "Transformer"
     },
     {
-      "id": 21,
+      "id": 20,
       "name": "Transformer - Railway",
       "capacity": "",
       "lat": -1.31614679,
@@ -249,18 +117,6 @@
       "status": "Operational",
       "in-village": "Mukuru Kwa Reuben",
       "out-of-village": "Mukuru Kwa Njenga",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 22,
-      "name": "Transformer - Wesinya",
-      "capacity": "",
-      "lat": -1.31797021,
-      "lng": 36.87620278,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
       "type": "KPLC",
       "device": "Transformer"
     },
@@ -277,19 +133,7 @@
       "device": "Transformer"
     },
     {
-      "id": 23,
-      "name": "Small Transformer - Rurie",
-      "capacity": "",
-      "lat": -1.31803591,
-      "lng": 36.87207118,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 24,
+      "id": 22,
       "name": "Transformer - Gatope",
       "capacity": "",
       "lat": -1.31548614,
@@ -298,30 +142,6 @@
       "in-village": "Mukuru Kwa Reuben",
       "out-of-village": "",
       "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 25,
-      "name": "Demolished Transformer - Vietnam",
-      "capacity": "",
-      "lat": -1.31492633,
-      "lng": 36.88173956,
-      "status": "Demolished",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": 26,
-      "name": "Removed Transformer - Wape Wape",
-      "capacity": "",
-      "lat": -1.31782149,
-      "lng": 36.887,
-      "status": "Removed",
-      "in-village": "Mukuru Kwa Njenga",
-      "out-of-village": "",
-      "type": "CBO/Business",
       "device": "Transformer"
     },
     {
@@ -337,51 +157,15 @@
       "device": "Transformer"
     },
     {
-      "id": "E5",
+      "id": "A1",
       "name": "Transformer - AA",
       "capacity": "",
-      "lat": -1.324,
-      "lng": 36.889,
+      "lat": -1.3235121667067635, 
+      "lng": 36.88782386557894,
       "status": "Operational",
       "in-village": "",
       "out-of-village": "Mukuru Kwa Njenga",
-      "type": "Estimated",
-      "device": "Transformer"
-    },
-    {
-      "id": 27,
-      "name": "Decommissioned Transformer - Gatope",
-      "capacity": "",
-      "lat": -1.31503822,
-      "lng": 36.86412483,
-      "status": "Removed",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
-      "type": "KPLC",
-      "device": "Transformer"
-    },
-    {
-      "id": "E1",
-      "name": "Transformer - Simba Cool",
-      "capacity": "",
-      "lat": -1.31703822,
-      "lng": 36.87012483,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
-      "type": "Estimated",
-      "device": "Transformer"
-    },
-    {
-      "id": "E2",
-      "name": "Transformer - Feed the Children",
-      "capacity": "",
-      "lat": -1.31273822,
-      "lng": 36.86892483,
-      "status": "Operational",
-      "in-village": "Mukuru Kwa Reuben",
-      "out-of-village": "",
-      "type": "Estimated",
+      "type": "Outside",
       "device": "Transformer"
     }
   ]

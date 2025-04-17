@@ -2927,6 +2927,37 @@ function applyInitialGroupOpacities() {
 
 // Function to load exclusion zones from GeoJSON
 function loadExclusionZones() {
+    // Create an SVG pattern for hatched lines
+    const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgContainer.setAttribute("style", "position: absolute; width: 0; height: 0;");
+    svgContainer.setAttribute("aria-hidden", "true");
+    document.body.appendChild(svgContainer);
+    
+    // Define the pattern for diagonal hatched lines
+    const pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
+    pattern.setAttribute("id", "exclusion-hatch");
+    pattern.setAttribute("patternUnits", "userSpaceOnUse");
+    pattern.setAttribute("width", "7");  // Increased spacing between lines
+    pattern.setAttribute("height", "7"); // Increased spacing between lines
+    pattern.setAttribute("patternTransform", "rotate(34)");
+    
+    // Create the line element for the pattern
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", "0");
+    line.setAttribute("y1", "0");
+    line.setAttribute("x2", "0");
+    line.setAttribute("y2", "12"); // Match height
+    line.setAttribute("stroke", "#555");
+    line.setAttribute("stroke-width", "6"); // Thicker lines
+    
+    // Add the line to the pattern
+    pattern.appendChild(line);
+    
+    // Add the pattern to the SVG container
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    defs.appendChild(pattern);
+    svgContainer.appendChild(defs);
+    
     fetch('data/exclude.geojson')
         .then(response => response.json())
         .then(data => {
@@ -2936,12 +2967,23 @@ function loadExclusionZones() {
             // Add the exclusion zones to the map
             const exclusionLayer = L.geoJSON(data, {
                 style: {
-                    color: '#FF5555',       // Red outline
+                    color: '#555',       // Grey outline
                     weight: 2,              // Normal border weight
                     opacity: 0.7,           // Normal opacity
-                    fillColor: '#FF5555',   // Red fill
-                    fillOpacity: 0.3,       // Semi-transparent fill
-                    dashArray: '5, 5'       // Dashed pattern
+                    fillColor: '#888888',   // Grey fill
+                    fillOpacity: 0.3,       // More transparent fill
+                    dashArray: '5, 5',      // Dashed pattern
+                    fillPattern: 'url(#exclusion-hatch)' // Apply hatched pattern
+                },
+                // Add custom renderer for the pattern
+                onEachFeature: function(feature, layer) {
+                    // After the layer is added to the map
+                    layer.on('add', function() {
+                        // Access the SVG path element and apply the pattern
+                        if (layer._path) {
+                            layer._path.setAttribute('fill', 'url(#exclusion-hatch)');
+                        }
+                    });
                 }
             }).addTo(excludeLayer);
             
@@ -2951,13 +2993,13 @@ function loadExclusionZones() {
                 const bounds = exclusionLayer.getBounds();
                 const center = bounds.getCenter();
                 
-                // Create a label with the same style as settlement labels but in red
+                // Create a label with the same style as settlement labels but in grey
                 L.marker(center, {
                     icon: L.divIcon({
                         className: 'label label-demolished',
-                        html: `<div style="color: #FF5555;">Demolished</div>`,
+                        html: `<div style="color: #888888; transform: rotate(-55deg);">Demolished</div>`,
                         iconSize: [120, 20],
-                        iconAnchor: [85, 90]
+                        iconAnchor: [128, 168]
                     })
                 }).addTo(excludeLayer);
             }
