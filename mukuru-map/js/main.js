@@ -826,15 +826,7 @@ function initializeTransformers() {
                      (transformer.status === "Removed" && showRemovedTransformers) ||
                      (transformer.status === "Demolished" && showDemolishedTransformers))) {
                     
-                    // Only check exclusion zones for operational and removed transformers
-                    // Don't apply the exclusion zone rule to demolished transformers
-                    if (transformer.status !== "Demolished" && document.getElementById('exclusion-toggle').checked) {
-                        const point = L.latLng(transformer.lat, transformer.lng);
-                        if (isPointInExclusionZone(point)) {
-                            console.log(`Skipping transformer in exclusion zone: ${transformer.name}`);
-                            return;
-                        }
-                    }
+                    // Exclusion zone check removed - all transformers will be visible regardless of being in exclusion zones
                     
                     // Determine bolt color based on status and in-village/out-of-village status
                     let boltColor;
