@@ -713,18 +713,6 @@ This allows for fine-grained control of the dots' visual prominence on the map. 
 
 ### User
 
-**Selected Code:**
-
-```
-```json
-},
-           "properties": {
-               "description": "<p><b>Simba Cool</b></p>",
-               "rotation": 20
-           }
-```
-```
-
 in the geojson, some of hte labels have a roation
 
 ---
