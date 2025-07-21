@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Listings Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .filters {
+            padding: 20px 30px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #bdc3c7;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: white;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .cars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .car-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .car-image {
+            width: 100%;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        .car-image img {
+            max-width: 90%;
+            max-height: 160px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            background: #f0f0f0;
+        }
+
+        .car-info {
+            padding: 20px;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .car-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        .car-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .car-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .detail-icon {
+            width: 12px;
+            height: 12px;
+            background: #3498db;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .brand-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .car-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .car-link:hover {
+            background: #2980b9;
+        }
+
+        /* Car Ratings */
+        .car-ratings {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .cool-factor, .reliability {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .cool-factor.high {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .cool-factor.medium {
+            background: #f39c12;
+            color: white;
+        }
+
+        .cool-factor.low {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .reliability.high {
+            background: #27ae60;
+            color: white;
+        }
+
+        .reliability.medium {
+            background: #f39c12;
+            color: white;
+        }
+
+        .reliability.low {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Recommendations Section */
+        .recommendations {
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .recommendations-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .recommendations-header h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .recommendations-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Reliability Warnings */
+        .reliability-warnings h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .warnings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .warning-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            color: #2c3e50;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .warning-card.high-risk {
+            border-left: 5px solid #e74c3c;
+            background: linear-gradient(135deg, #fff 0%, #fdf2f2 100%);
+        }
+
+        .warning-card.medium-risk {
+            border-left: 5px solid #f39c12;
+            background: linear-gradient(135deg, #fff 0%, #fef9e7 100%);
+        }
+
+        .warning-card.low-risk {
+            border-left: 5px solid #27ae60;
+            background: linear-gradient(135deg, #fff 0%, #f0f9f0 100%);
+        }
+
+        .warning-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .warning-badge:contains("HIGH RISK") {
+            background: #e74c3c;
+        }
+
+        .warning-badge:contains("MEDIUM RISK") {
+            background: #f39c12;
+        }
+
+        .warning-badge:contains("RELIABLE") {
+            background: #27ae60;
+        }
+
+        .warning-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .warning-issues {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .warning-issues ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .warning-issues li {
+            margin-bottom: 5px;
+        }
+
+        /* Mom Recommendations */
+        .mom-recommendations h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .mom-recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mom-recommendation-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            color: #2c3e50;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .mom-recommendation-card.top-safe {
+            border: 3px solid #27ae60;
+            background: linear-gradient(135deg, #fff 0%, #f0f9f0 100%);
+        }
+
+        .mom-recommendation-card.avoid {
+            border: 3px solid #e74c3c;
+            background: linear-gradient(135deg, #fff 0%, #fdf2f2 100%);
+        }
+
+        .mom-recommendation-card.medium {
+            border: 3px solid #f39c12;
+            background: linear-gradient(135deg, #fff 0%, #fef9e7 100%);
+        }
+
+        .safe-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .avoid-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .medium-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #f39c12;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .mom-recommendation-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .mom-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .mom-reasons ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .mom-reasons li {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* Cool & Reliable */
+        .cool-reliable {
+            border: 3px solid #3498db; /* A distinct color for cool & reliable */
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+        }
+
+        .cool-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Cool Factor Analysis */
+        .cool-picks {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .cool-picks h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .cool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .cool-category h4 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .cool-options {
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .cool-option {
+            padding: 10px 15px;
+            border-bottom: 1px solid #bdc3c7;
+            font-size: 0.9rem;
+            color: #34495e;
+        }
+
+        .cool-option:last-child {
+            border-bottom: none;
+        }
+
+        .cool-option strong {
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .cool-option.good {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+        }
+
+        .cool-option.medium {
+            background: #fff3e0;
+            border-left: 4px solid #f39c12;
+        }
+
+        .cool-option.bad {
+            background: #fde7e9;
+            border-left: 4px solid #e74c3c;
+        }
+
+        /* Wife Approval Rating */
+        .wife-approval {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .wife-approval h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .approval-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .approval-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            color: #2c3e50;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .approval-card.high {
+            border: 3px solid #27ae60;
+            background: linear-gradient(135deg, #fff 0%, #f0f9f0 100%);
+        }
+
+        .approval-card.medium {
+            border: 3px solid #f39c12;
+            background: linear-gradient(135deg, #fff 0%, #fef9e7 100%);
+        }
+
+        .approval-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .approval-card.high .approval-badge {
+            background: #27ae60;
+        }
+
+        .approval-card.medium .approval-badge {
+            background: #f39c12;
+        }
+
+        .approval-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .approval-reasons ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .approval-reasons li {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* Advanced Filters */
+        .advanced-filters {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 15px;
+        }
+
+        .advanced-filters h3 {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3498db;
+        }
+
+        .sort-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .sort-controls label {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .sort-controls select {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .reset-btn {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #c0392b;
+        }
+
+        .filter-stats {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        #filteredCount {
+            color: #3498db;
+        }
+
+        #totalCount {
+            color: #95a5a6;
+        }
+
+        .car-score {
+            font-size: 0.9rem;
+            color: #2c3e50;
+            margin: 10px 0 0 0;
+            text-align: center;
+        }
+
+        .car-subscores {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .car-subscores span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .cars-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 20px;
+            }
+
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Car Listings Viewer</h1>
+            <p>Complete collection of saved car advertisements with images and details</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">74</div>
+                <div class="stat-label">Total Cars</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">£4,110</div>
+                <div class="stat-label">Average Price</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">18</div>
+                <div class="stat-label">Different Brands</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1997-2017</div>
+                <div class="stat-label">Year Range</div>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <div class="recommendations-header">
+                <h2>🚸 School Run Mom Recommendations</h2>
+                <p>Reliability, safety & practicality for busy moms - avoiding common pitfalls</p>
+            </div>
+
+            <div class="reliability-warnings">
+                <h3>⚠️ Reliability Warnings by Brand</h3>
+                <div class="warnings-grid">
+                    <div class="warning-card high-risk">
+                        <div class="warning-badge">🚨 HIGH RISK</div>
+                        <h4>Land Rover (12 cars)</h4>
+                        <div class="warning-issues">
+                            <strong>Common Problems:</strong>
+                            <ul>
+                                <li>Electrical gremlins & air suspension failures</li>
+                                <li>Expensive repairs (£2,000+ common)</li>
+                                <li>Poor fuel economy (15-20mpg)</li>
+                                <li>Complex electronics prone to failure</li>
+                            </ul>
+                            <strong>For School Run:</strong> Unreliable, expensive to maintain
+                        </div>
+                    </div>
+
+                    <div class="warning-card medium-risk">
+                        <div class="warning-badge">⚠️ MEDIUM RISK</div>
+                        <h4>MINI (11 cars)</h4>
+                        <div class="warning-issues">
+                            <strong>Common Problems:</strong>
+                            <ul>
+                                <li>Timing chain issues (expensive repair)</li>
+                                <li>Water pump & thermostat failures</li>
+                                <li>Limited rear seat space for kids</li>
+                                <li>Small boot for school bags</li>
+                            </ul>
+                            <strong>For School Run:</strong> Fun but cramped, reliability concerns
+                        </div>
+                    </div>
+
+                    <div class="warning-card high-risk">
+                        <div class="warning-badge">🚨 HIGH RISK</div>
+                        <h4>Jaguar (8 cars)</h4>
+                        <div class="warning-issues">
+                            <strong>Common Problems:</strong>
+                            <ul>
+                                <li>Gearbox issues (especially automatics)</li>
+                                <li>Electrical problems & sensor failures</li>
+                                <li>Expensive parts & labor costs</li>
+                                <li>Complex infotainment system</li>
+                            </ul>
+                            <strong>For School Run:</strong> Luxury but unreliable, expensive repairs
+                        </div>
+                    </div>
+
+                    <div class="warning-card high-risk">
+                        <div class="warning-badge">🚨 HIGH RISK</div>
+                        <h4>Porsche (5 cars)</h4>
+                        <div class="warning-issues">
+                            <strong>Common Problems:</strong>
+                            <ul>
+                                <li>Engine & transmission issues</li>
+                                <li>Very expensive parts & servicing</li>
+                                <li>Poor fuel economy</li>
+                                <li>Limited practicality for families</li>
+                            </ul>
+                            <strong>For School Run:</strong> Impractical, very expensive to maintain
+                        </div>
+                    </div>
+
+                    <div class="warning-card low-risk">
+                        <div class="warning-badge">✅ RELIABLE</div>
+                        <h4>Toyota & Lexus (10 cars)</h4>
+                        <div class="warning-issues">
+                            <strong>Common Problems:</strong>
+                            <ul>
+                                <li>Generally very reliable</li>
+                                <li>Good fuel economy</li>
+                                <li>Affordable parts & servicing (Toyota)</li>
+                                <li>Good safety ratings</li>
+                                <li>Lexus: Premium parts but same reliability</li>
+                            </ul>
+                            <strong>For School Run:</strong> Excellent choice - reliable & practical
+                        </div>
+                    </div>
+
+                    <div class="warning-card medium-risk">
+                        <div class="warning-badge">⚠️ MEDIUM RISK</div>
+                        <h4>Volvo (4 cars)</h4>
+                        <div class="warning-issues">
+                            <strong>Common Problems:</strong>
+                            <ul>
+                                <li>Electrical issues in older models</li>
+                                <li>Expensive parts but good safety</li>
+                                <li>Some transmission issues</li>
+                                <li>Good safety features</li>
+                            </ul>
+                            <strong>For School Run:</strong> Good safety, moderate reliability
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mom-recommendations">
+                <h3>👩‍👧‍👦 Best Picks for School Run Moms</h3>
+                <div class="mom-recommendations-grid">
+                    <div class="mom-recommendation-card top-safe">
+                        <div class="safe-badge">🛡️ SAFEST CHOICE</div>
+                        <h4>Toyota & Lexus Models</h4>
+                        <div class="mom-price">£2,000 - £6,000</div>
+                        <div class="mom-reasons">
+                            <strong>Why Perfect for Moms:</strong>
+                            <ul>
+                                <li>✅ Extremely reliable - won't let you down</li>
+                                <li>✅ Toyota: Affordable parts & servicing</li>
+                                <li>✅ Lexus: Premium feel, same reliability</li>
+                                <li>✅ Good fuel economy</li>
+                                <li>✅ Excellent safety ratings</li>
+                                <li>✅ Spacious for kids & bags</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mom-recommendation-card cool-reliable">
+                        <div class="cool-badge">🔥 COOL & RELIABLE</div>
+                        <h4>SUVs & Convertibles</h4>
+                        <div class="mom-price">£2,500 - £5,000</div>
+                        <div class="mom-reasons">
+                            <strong>Style + Practicality:</strong>
+                            <ul>
+                                <li>✅ Suzuki Jimny - Cool 4x4, simple mechanics</li>
+                                <li>✅ MINI Convertible - Fun factor, good fuel economy</li>
+                                <li>✅ Volvo XC60/90 - Safe, stylish, moderate reliability</li>
+                                <li>✅ Toyota RAV4 - Reliable SUV with cool factor</li>
+                                <li>⚠️ Avoid: Land Rover (cool but unreliable)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mom-recommendation-card avoid">
+                        <div class="avoid-badge">❌ AVOID</div>
+                        <h4>Land Rover & Jaguar</h4>
+                        <div class="mom-price">£3,000 - £5,000</div>
+                        <div class="mom-reasons">
+                            <strong>Why to Avoid:</strong>
+                            <ul>
+                                <li>❌ Frequent breakdowns & expensive repairs</li>
+                                <li>❌ Poor fuel economy (costly to run)</li>
+                                <li>❌ Complex electronics prone to failure</li>
+                                <li>❌ Unreliable for school run schedule</li>
+                                <li>❌ High maintenance costs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cool-picks">
+                <h3>🔥 Cool Factor Analysis</h3>
+                <div class="cool-grid">
+                    <div class="cool-category">
+                        <h4>🚙 SUVs (Wife's Preference)</h4>
+                        <div class="cool-options">
+                            <div class="cool-option good">
+                                <strong>Suzuki Jimny (£3,500)</strong>
+                                <span>✅ Cool 4x4, simple, reliable</span>
+                            </div>
+                            <div class="cool-option good">
+                                <strong>Toyota RAV4 (£3,000-4,000)</strong>
+                                <span>✅ Reliable, spacious, good looking</span>
+                            </div>
+                            <div class="cool-option good">
+                                <strong>Lexus RX/NX (£4,000-6,000)</strong>
+                                <span>✅ Premium SUV, same reliability as Toyota</span>
+                            </div>
+                            <div class="cool-option bad">
+                                <strong>Land Rover Range Rover (£4,000-6,000)</strong>
+                                <span>❌ Cool but unreliable & expensive</span>
+                            </div>
+                            <div class="cool-option medium">
+                                <strong>Volvo XC60 (£4,000-5,000)</strong>
+                                <span>⚠️ Safe & stylish but expensive parts</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cool-category">
+                        <h4>🌞 Convertibles (Wife's Preference)</h4>
+                        <div class="cool-options">
+                            <div class="cool-option good">
+                                <strong>MINI Convertible (£2,195)</strong>
+                                <span>✅ Fun factor, good fuel economy</span>
+                            </div>
+                            <div class="cool-option medium">
+                                <strong>BMW 3-Series Convertible (£3,500-5,000)</strong>
+                                <span>⚠️ Cool but reliability concerns</span>
+                            </div>
+                            <div class="cool-option bad">
+                                <strong>Jaguar XK Convertible (£4,000-6,000)</strong>
+                                <span>❌ Very cool but very unreliable</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wife-approval">
+                <h3>💝 Wife Approval Rating</h3>
+                <div class="approval-grid">
+                    <div class="approval-card high">
+                        <div class="approval-badge">💯 WIFE APPROVED</div>
+                        <h4>Suzuki Jimny</h4>
+                        <div class="approval-reasons">
+                            <ul>
+                                <li>✅ Cool 4x4 SUV style</li>
+                                <li>✅ Reliable & simple mechanics</li>
+                                <li>✅ Affordable to run & maintain</li>
+                                <li>✅ Perfect for school runs</li>
+                                <li>✅ Unique & conversation starter</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="approval-card high">
+                        <div class="approval-badge">💯 WIFE APPROVED</div>
+                        <h4>MINI Convertible</h4>
+                        <div class="approval-reasons">
+                            <ul>
+                                <li>✅ Fun convertible experience</li>
+                                <li>✅ Good fuel economy</li>
+                                <li>✅ Iconic design & cool factor</li>
+                                <li>✅ Affordable price point</li>
+                                <li>⚠️ Small space but manageable</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="approval-card medium">
+                        <div class="approval-badge">🤔 COMPROMISE</div>
+                        <h4>Toyota RAV4</h4>
+                        <div class="approval-reasons">
+                            <ul>
+                                <li>✅ Reliable SUV style</li>
+                                <li>✅ Spacious & practical</li>
+                                <li>✅ Excellent reliability</li>
+                                <li>⚠️ Less "cool" but very sensible</li>
+                                <li>✅ Wife will appreciate reliability</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="approval-card high">
+                        <div class="approval-badge">💯 WIFE APPROVED</div>
+                        <h4>Lexus SUV Models</h4>
+                        <div class="approval-reasons">
+                            <ul>
+                                <li>✅ Premium SUV styling (wife's preference)</li>
+                                <li>✅ Same reliability as Toyota</li>
+                                <li>✅ Luxury feel without unreliability</li>
+                                <li>✅ Good safety & spacious interior</li>
+                                <li>✅ Perfect balance of style & reliability</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mom-checklist">
+                <h3>📋 School Run Mom Checklist</h3>
+                <div class="checklist-grid">
+                    <div class="checklist-item">
+                        <strong>✅ MUST HAVE:</strong>
+                        <ul>
+                            <li>Reliability (won't break down)</li>
+                            <li>Good fuel economy</li>
+                            <li>Affordable servicing</li>
+                            <li>Enough space for kids & bags</li>
+                            <li>Good safety ratings</li>
+                        </ul>
+                    </div>
+                    <div class="checklist-item">
+                        <strong>❌ AVOID:</strong>
+                        <ul>
+                            <li>Expensive luxury brands</li>
+                            <li>Complex electronics</li>
+                            <li>Poor fuel economy</li>
+                            <li>Expensive parts</li>
+                            <li>Unreliable reputation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="advanced-filters">
+            <h3>🔍 Advanced Filters & Sorters</h3>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="brandFilter">Brand:</label>
+                    <select id="brandFilter">
+                        <option value="">All Brands</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="yearFilter">Year Range:</label>
+                    <select id="yearFilter">
+                        <option value="">All Years</option>
+                        <option value="2015-2017">2015-2017 (Modern)</option>
+                        <option value="2010-2014">2010-2014 (Recent)</option>
+                        <option value="2005-2009">2005-2009 (Older)</option>
+                        <option value="1997-2004">1997-2004 (Classic)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="mileageFilter">Mileage:</label>
+                    <select id="mileageFilter">
+                        <option value="">All Mileages</option>
+                        <option value="0-50000">Under 50k miles</option>
+                        <option value="50000-100000">50k-100k miles</option>
+                        <option value="100000-150000">100k-150k miles</option>
+                        <option value="150000+">Over 150k miles</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="priceFilter">Price Range:</label>
+                    <select id="priceFilter">
+                        <option value="">All Prices</option>
+                        <option value="0-3000">Under £3,000</option>
+                        <option value="3000-5000">£3,000-£5,000</option>
+                        <option value="5000-7000">£5,000-£7,000</option>
+                        <option value="7000+">Over £7,000</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="coolFactorFilter">Cool Factor:</label>
+                    <select id="coolFactorFilter">
+                        <option value="">All Cars</option>
+                        <option value="high">🔥 High Cool Factor</option>
+                        <option value="medium">😎 Medium Cool Factor</option>
+                        <option value="low">😐 Low Cool Factor</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="reliabilityFilter">Reliability:</label>
+                    <select id="reliabilityFilter">
+                        <option value="">All Cars</option>
+                        <option value="high">✅ High Reliability</option>
+                        <option value="medium">⚠️ Medium Reliability</option>
+                        <option value="low">❌ Low Reliability</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sort-controls">
+                <label for="sortBy">Sort By:</label>
+                <select id="sortBy">
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="year-new">Year: Newest First</option>
+                    <option value="year-old">Year: Oldest First</option>
+                    <option value="mileage-low">Mileage: Low to High</option>
+                    <option value="mileage-high">Mileage: High to Low</option>
+                    <option value="cool-factor">Cool Factor</option>
+                    <option value="reliability">Reliability</option>
+                </select>
+
+                <button id="resetFilters" class="reset-btn">🔄 Reset All Filters</button>
+            </div>
+
+            <div class="filter-stats">
+                <span id="filteredCount">74</span> cars showing
+                <span id="totalCount">74</span> total cars
+            </div>
+        </div>
+
+        <div class="cars-grid" id="carsGrid">
+            <!-- Cars will be loaded here via JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Load and display cars
+        loadCars();
+
+        // Advanced filtering and sorting functionality
+        let allCars = [];
+        let filteredCars = [];
+
+        // Cool factor ratings
+        const coolFactorRatings = {
+            'Porsche': 'high',
+            'Jaguar': 'high',
+            'Land Rover': 'high',
+            'MINI': 'high',
+            'BMW': 'high',
+            'Mercedes-Benz': 'high',
+            'Lexus': 'medium',
+            'Volvo': 'medium',
+            'Toyota': 'low',
+            'Honda': 'low',
+            'Nissan': 'low',
+            'Suzuki': 'medium',
+            'Subaru': 'medium',
+            'Mazda': 'medium',
+            'Volkswagen': 'medium',
+            'Citroen': 'low',
+            'Maserati': 'high',
+            'Mitsubishi': 'low',
+            'Ssangyong': 'low',
+            'Infiniti': 'medium',
+            'Alfa Romeo': 'medium'
+        };
+
+        // Reliability ratings
+        const reliabilityRatings = {
+            'Toyota': 'high',
+            'Honda': 'high',
+            'Lexus': 'high',
+            'Suzuki': 'medium',
+            'Subaru': 'medium',
+            'Mazda': 'medium',
+            'Volkswagen': 'medium',
+            'Volvo': 'medium',
+            'Nissan': 'medium',
+            'MINI': 'medium',
+            'BMW': 'medium',
+            'Mercedes-Benz': 'medium',
+            'Land Rover': 'low',
+            'Jaguar': 'low',
+            'Porsche': 'low',
+            'Citroen': 'low',
+            'Maserati': 'low',
+            'Mitsubishi': 'low',
+            'Ssangyong': 'low',
+            'Infiniti': 'low'
+        };
+
+        // Add to sorters
+        const sortBySelect = document.getElementById('sortBy');
+        if (sortBySelect && !Array.from(sortBySelect.options).some(opt => opt.value === 'score')) {
+            const scoreOption = document.createElement('option');
+            scoreOption.value = 'score';
+            scoreOption.textContent = 'Aggregate Score';
+            sortBySelect.appendChild(scoreOption);
+        }
+
+        // Compute aggregate scores for all cars
+        function computeAggregateScores(cars) {
+            // Get min/max for normalization
+            const prices = cars.map(c => typeof c.price === 'number' && !isNaN(c.price) ? c.price : Infinity).filter(x => x !== Infinity);
+            const mileages = cars.map(c => typeof c.mileage === 'number' && !isNaN(c.mileage) ? c.mileage : Infinity).filter(x => x !== Infinity);
+            const years = cars.map(c => typeof c.year === 'number' && !isNaN(c.year) ? c.year : -Infinity).filter(x => x !== -Infinity);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const minMileage = Math.min(...mileages);
+            const maxMileage = Math.max(...mileages);
+            const minYear = Math.min(...years);
+            const maxYear = Math.max(...years);
+
+            cars.forEach(car => {
+                // Normalize price (lower is better)
+                let priceScore = 0;
+                if (typeof car.price === 'number' && !isNaN(car.price) && maxPrice > minPrice) {
+                    priceScore = 3 - 3 * (car.price - minPrice) / (maxPrice - minPrice);
+                }
+
+                // Normalize mileage (lower is better)
+                let mileageScore = 0;
+                if (typeof car.mileage === 'number' && !isNaN(car.mileage) && maxMileage > minMileage) {
+                    mileageScore = 3 - 3 * (car.mileage - minMileage) / (maxMileage - minMileage);
+                }
+
+                // Age score (newer is better)
+                let ageScore = 0;
+                if (typeof car.year === 'number' && !isNaN(car.year) && maxYear > minYear) {
+                    ageScore = 3 * (car.year - minYear) / (maxYear - minYear);
+                }
+
+                // Custom cool factor mapping by model/brand
+                let coolScore = null;
+                const title = car.title ? car.title.toLowerCase() : '';
+                const brand = car.brand || '';
+
+                if (brand === 'Land Rover') {
+                    if (title.includes('freelander')) {
+                        coolScore = 2;
+                    } else if (title.includes('discovery')) {
+                        coolScore = 2.5;
+                    } else if (title.includes('range rover')) {
+                        coolScore = 3;
+                    }
+                } else if (brand === 'Porsche') {
+                    coolScore = 3;
+                } else if (brand === 'Jaguar') {
+                    coolScore = 3;
+                } else if (brand === 'Mercedes-Benz' || brand === 'Mercedes') {
+                    coolScore = 2.5;
+                } else if (brand === 'Mazda' && title.includes('rx-8')) {
+                    coolScore = 3.5;
+                } else if (brand === 'Maserati') {
+                    coolScore = 4;
+                } else if (title.includes('land cruiser')) {
+                    coolScore = 3;
+                } else if (brand === 'Infiniti') {
+                    coolScore = 3;
+                } else if (brand === 'Alfa Romeo') {
+                    coolScore = 2.5;
+                }
+
+                // MINI specific adjustments (overrides above if MINI)
+                if (brand === 'MINI') {
+                    if (car.body_type && car.body_type.toLowerCase().includes('convertible')) {
+                        coolScore = 2.5; // MINI convertible
+                    } else {
+                        coolScore = 2.0; // Standard MINI
+                    }
+                }
+
+                // Fallback to default mapping if not set
+                if (coolScore === null) {
+                    const coolMap = { high: 3, medium: 2, low: 1 };
+                    coolScore = coolMap[coolFactorRatings[brand] || 'low'];
+                }
+
+                // Add bonus for SUV
+                if (car.body_type && car.body_type.toLowerCase().includes('suv')) {
+                    coolScore += 0.1;
+                }
+                // Penalty for small car/hatchback
+                if (car.body_type && (car.body_type.toLowerCase().includes('hatchback') || car.body_type.toLowerCase().includes('small'))) {
+                    coolScore -= 0.2;
+                }
+
+                // Reliability (reduced weight, with diesel/auto adjustments)
+                const relMap = { high: 3, medium: 2, low: 1 };
+                let relScore = relMap[reliabilityRatings[car.brand] || 'medium'];
+                // Diesel penalty
+                if (car.fuel_type && car.fuel_type.toLowerCase().includes('diesel')) {
+                    relScore -= 0.2;
+                }
+                // Automatic bonus
+                if (car.transmission && car.transmission.toLowerCase().includes('auto')) {
+                    relScore += 0.1;
+                }
+
+                // Store subscores for display
+                car.priceScore = priceScore.toFixed(2);
+                car.mileageScore = mileageScore.toFixed(2);
+                car.ageScore = ageScore.toFixed(2);
+                car.coolScore = coolScore.toFixed(2);
+                car.relScore = relScore.toFixed(2);
+
+                // Aggregate with new weights
+                car.aggregateScore = ((priceScore + mileageScore + (coolScore * 1.25) + (ageScore * 0.5) + (relScore * 0.5)) / 4.25).toFixed(2);
+            });
+        }
+
+        // Patch loadCars to compute scores after loading
+        async function loadCars() {
+            try {
+                const response = await fetch('cars_data.json');
+                const data = await response.json();
+                allCars = data.cars;
+                computeAggregateScores(allCars);
+                filteredCars = sortCars([...allCars], 'score');
+                // Set sortBy dropdown to 'score' by default
+                const sortBySelect = document.getElementById('sortBy');
+                if (sortBySelect) sortBySelect.value = 'score';
+                populateBrandFilter();
+                displayCars(filteredCars);
+                setupFilterListeners();
+            } catch (error) {
+                console.error('Error loading cars:', error);
+                const carsGrid = document.getElementById('carsGrid');
+                if (carsGrid) carsGrid.innerHTML = '<p>Error loading car data. Please ensure cars_data.json is in the same directory.</p>';
+            }
+        }
+
+        function populateBrandFilter() {
+            const brandFilter = document.getElementById('brandFilter');
+            const brands = [...new Set(allCars.map(car => car.brand).filter(brand => brand))];
+            brands.sort();
+
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                brandFilter.appendChild(option);
+            });
+        }
+
+        function setupFilterListeners() {
+            // Filter event listeners
+            document.getElementById('brandFilter').addEventListener('change', applyFilters);
+            document.getElementById('yearFilter').addEventListener('change', applyFilters);
+            document.getElementById('mileageFilter').addEventListener('change', applyFilters);
+            document.getElementById('priceFilter').addEventListener('change', applyFilters);
+            document.getElementById('coolFactorFilter').addEventListener('change', applyFilters);
+            document.getElementById('reliabilityFilter').addEventListener('change', applyFilters);
+
+            // Sort event listener
+            document.getElementById('sortBy').addEventListener('change', applyFilters);
+
+            // Reset button
+            document.getElementById('resetFilters').addEventListener('click', resetAllFilters);
+        }
+
+        function applyFilters() {
+            let filtered = [...allCars];
+
+            // Brand filter
+            const brandFilter = document.getElementById('brandFilter').value;
+            if (brandFilter) {
+                filtered = filtered.filter(car => car.brand === brandFilter);
+            }
+
+            // Year filter
+            const yearFilter = document.getElementById('yearFilter').value;
+            if (yearFilter) {
+                const [minYear, maxYear] = yearFilter.split('-').map(Number);
+                filtered = filtered.filter(car => {
+                    const year = car.year;
+                    if (yearFilter.includes('+')) {
+                        return year >= minYear;
+                    }
+                    return year >= minYear && year <= maxYear;
+                });
+            }
+
+            // Mileage filter
+            const mileageFilter = document.getElementById('mileageFilter').value;
+            if (mileageFilter) {
+                const [minMileage, maxMileage] = mileageFilter.split('-').map(Number);
+                filtered = filtered.filter(car => {
+                    const mileage = car.mileage;
+                    if (mileageFilter.includes('+')) {
+                        return mileage >= minMileage;
+                    }
+                    return mileage >= minMileage && mileage <= maxMileage;
+                });
+            }
+
+            // Price filter
+            const priceFilter = document.getElementById('priceFilter').value;
+            if (priceFilter) {
+                const [minPrice, maxPrice] = priceFilter.split('-').map(Number);
+                filtered = filtered.filter(car => {
+                    const price = car.price;
+                    if (priceFilter.includes('+')) {
+                        return price >= minPrice;
+                    }
+                    return price >= minPrice && price <= maxPrice;
+                });
+            }
+
+            // Cool factor filter
+            const coolFactorFilter = document.getElementById('coolFactorFilter').value;
+            if (coolFactorFilter) {
+                filtered = filtered.filter(car => {
+                    const coolFactor = coolFactorRatings[car.brand] || 'low';
+                    return coolFactor === coolFactorFilter;
+                });
+            }
+
+            // Reliability filter
+            const reliabilityFilter = document.getElementById('reliabilityFilter').value;
+            if (reliabilityFilter) {
+                filtered = filtered.filter(car => {
+                    const reliability = reliabilityRatings[car.brand] || 'medium';
+                    return reliability === reliabilityFilter;
+                });
+            }
+
+            // Sort
+            const sortBy = document.getElementById('sortBy').value;
+            filtered = sortCars(filtered, sortBy);
+
+            // Update display
+            filteredCars = filtered;
+            displayCars(filtered);
+            updateFilterStats();
+        }
+
+        function sortCars(cars, sortBy) {
+            const sorted = [...cars];
+
+            switch (sortBy) {
+                case 'score':
+                    return sorted.sort((a, b) => b.aggregateScore - a.aggregateScore);
+                case 'price-low':
+                    return sorted.sort((a, b) => a.price - b.price);
+                case 'price-high':
+                    return sorted.sort((a, b) => b.price - a.price);
+                case 'year-new':
+                    return sorted.sort((a, b) => b.year - a.year);
+                case 'year-old':
+                    return sorted.sort((a, b) => a.year - b.year);
+                case 'mileage-low':
+                    return sorted.sort((a, b) => a.mileage - b.mileage);
+                case 'mileage-high':
+                    return sorted.sort((a, b) => b.mileage - a.mileage);
+                case 'cool-factor':
+                    return sorted.sort((a, b) => {
+                        const aCool = coolFactorRatings[a.brand] || 'low';
+                        const bCool = coolFactorRatings[b.brand] || 'low';
+                        const coolOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                        return coolOrder[bCool] - coolOrder[aCool];
+                    });
+                case 'reliability':
+                    return sorted.sort((a, b) => {
+                        const aRel = reliabilityRatings[a.brand] || 'medium';
+                        const bRel = reliabilityRatings[b.brand] || 'medium';
+                        const relOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                        return relOrder[bRel] - relOrder[aRel];
+                    });
+                default:
+                    return sorted;
+            }
+        }
+
+        function resetAllFilters() {
+            document.getElementById('brandFilter').value = '';
+            document.getElementById('yearFilter').value = '';
+            document.getElementById('mileageFilter').value = '';
+            document.getElementById('priceFilter').value = '';
+            document.getElementById('coolFactorFilter').value = '';
+            document.getElementById('reliabilityFilter').value = '';
+            document.getElementById('sortBy').value = 'score';
+
+            filteredCars = [...allCars];
+            displayCars(filteredCars);
+            updateFilterStats();
+        }
+
+        function displayCars(cars) {
+            const carsGrid = document.getElementById('carsGrid');
+            if (!carsGrid) return;
+            carsGrid.innerHTML = '';
+
+            cars.forEach(car => {
+                const carCard = document.createElement('div');
+                carCard.className = 'car-card';
+
+                // Brand tag
+                const brandTag = car.brand ? `<span class='brand-tag'>${car.brand}</span>` : '';
+
+                // Safe price and mileage formatting
+                const priceStr = (typeof car.price === 'number' && !isNaN(car.price)) ? '£' + car.price.toLocaleString() : '';
+                const mileageStr = (typeof car.mileage === 'number' && !isNaN(car.mileage)) ? car.mileage.toLocaleString() + ' miles' : '';
+                const scoreStr = car.aggregateScore !== undefined ? `<div class='car-score'>Score: <b>${car.aggregateScore}</b> / 3.00+</div>` : '';
+
+                // Subscores (assume they are calculated in computeAggregateScores)
+                const subscoreStr = (car.priceScore !== undefined && car.mileageScore !== undefined && car.ageScore !== undefined && car.coolScore !== undefined && car.relScore !== undefined)
+                    ? `<div class='car-subscores'>
+                        <span title='Price Score'>💸 ${car.priceScore}</span>
+                        <span title='Mileage Score'>🛣️ ${car.mileageScore}</span>
+                        <span title='Age Score'>⏳ ${car.ageScore}</span>
+                        <span title='Cool Factor'>🔥 ${car.coolScore}</span>
+                        <span title='Reliability'>✅ ${car.relScore}</span>
+                    </div>`
+                    : '';
+
+                carCard.innerHTML = `
+                    <a href="https://www.autotrader.co.uk${car.link}" target="_blank" class="car-image-link">
+                        <div class="car-image">
+                            <img src="${car.image_url}" alt="${car.image_alt || car.title}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                        </div>
+                    </a>
+                    <div class="car-info">
+                        ${brandTag}
+                        <div class="car-title">${car.title}</div>
+                        <div class="car-price">${priceStr}</div>
+                        ${scoreStr}
+                        ${subscoreStr}
+                        <div class="car-details">
+                            <div class="detail-item"><span class="detail-icon"></span> ${car.year || ''}</div>
+                            <div class="detail-item"><span class="detail-icon"></span> ${mileageStr}</div>
+                            <div class="detail-item"><span class="detail-icon"></span> ${car.fuel_type || ''}</div>
+                            <div class="detail-item"><span class="detail-icon"></span> ${car.transmission || ''}</div>
+                            <div class="detail-item"><span class="detail-icon"></span> ${car.body_type || ''}</div>
+                        </div>
+                        <a href="https://www.autotrader.co.uk${car.link}" target="_blank" class="car-link">View Details</a>
+                    </div>
+                `;
+
+                carsGrid.appendChild(carCard);
+            });
+        }
+
+        function updateFilterStats() {
+            document.getElementById('filteredCount').textContent = filteredCars.length;
+            document.getElementById('totalCount').textContent = allCars.length;
+        }
+    </script>
+</body>
+</html>
